@@ -70,11 +70,15 @@ Der Lauf legt an:
 ### Optionale Einstellungen
 
 ```bash
-export NOVERA_CLOCK_URL="https://clarknissen-lab.github.io/NoveraHQ/"   # Live-Uhr im Header
+export NOVERA_CLOCK_URL="https://clarknissen-lab.github.io/NoveraHQ/"   # Header mit Logo und Live-Uhr
 export NOVERA_SPOTIFY_URL="https://open.spotify.com/embed/playlist/…"   # Arbeitsplaylist
 export NOVERA_GCAL_EMBED_URL="https://calendar.google.com/calendar/embed?src=…"
 export NOVERA_DRIVE_URL="https://drive.google.com/drive/folders/…"
 ```
+
+`NOVERA_LOGO_URL` musst du nicht setzen — der Builder leitet die Adresse des
+Logos aus `NOVERA_CLOCK_URL` ab und setzt sie als Icon der HQ-Seite. Details in
+[BRANDING.md](BRANDING.md).
 
 Ist eine davon nicht gesetzt, entsteht an der Stelle ein orange markierter
 Platzhalter mit der Anleitung — nichts geht kaputt, es fehlt nur der Inhalt.
@@ -91,7 +95,8 @@ npm run build:dry             # nichts schreiben, nur prüfen
 
 ## Schritt 4 — Live-Uhr veröffentlichen
 
-Notion hat keine Uhr, die von selbst weiterläuft. Das Widget in `widget/` liefert sie.
+Notion hat keine Uhr, die von selbst weiterläuft. Das Widget in `widget/` liefert
+sie — zusammen mit dem Novera-Logo und der Wortmarke.
 
 1. Im Repo: **Settings** → **Pages** → Source: **GitHub Actions**
 2. Nach `main` pushen — der Workflow `pages.yml` veröffentlicht `widget/`
@@ -101,6 +106,10 @@ Notion hat keine Uhr, die von selbst weiterläuft. Das Widget in `widget/` liefe
 
 Deutsche Beschriftung und 24-Stunden-Anzeige: `?lang=de` an die URL hängen.
 Für 12-Stunden-Anzeige `?lang=de&h12=1`.
+
+Sobald die Seite steht, liegt auch das Logo öffentlich unter
+`…/brand/favicon.svg` — der Builder benutzt es als Seiten-Icon, sodass das
+Novera-Monogramm in der Notion-Seitenleiste steht.
 
 ---
 

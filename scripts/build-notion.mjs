@@ -14,6 +14,7 @@
  *
  * Optional:
  *   NOVERA_CLOCK_URL        URL des Uhr-Widgets (GitHub Pages)
+ *   NOVERA_LOGO_URL         Logo als Seiten-Icon; wird sonst aus NOVERA_CLOCK_URL abgeleitet
  *   NOVERA_SPOTIFY_URL      Spotify-Playlist
  *   NOVERA_GCAL_EMBED_URL   Google-Calendar-Einbettung
  *   NOVERA_DRIVE_URL        Drive-Hauptordner
@@ -51,6 +52,13 @@ const PARENT = normalizeId(process.env.NOTION_PARENT_PAGE);
 
 const URLS = {
   clock: process.env.NOVERA_CLOCK_URL || null,
+  // Das Logo liegt im selben Verzeichnis wie das Widget, deshalb reicht die
+  // Uhr-URL — eine eigene Angabe überschreibt sie.
+  logo:
+    process.env.NOVERA_LOGO_URL ||
+    (process.env.NOVERA_CLOCK_URL
+      ? process.env.NOVERA_CLOCK_URL.replace(/\/?$/, "/") + "brand/favicon.svg"
+      : null),
   spotifyEmbed: process.env.NOVERA_SPOTIFY_URL || null,
   googleCalendarEmbed: process.env.NOVERA_GCAL_EMBED_URL || null,
   driveRoot: process.env.NOVERA_DRIVE_URL || null,
@@ -296,15 +304,20 @@ async function createViews() {
 
 /* ═════════════════════════════════════════════════════════════ 7. SEITEN */
 
-async function createPage(key, { parent, title, icon, blocks }) {
+async function createPage(key, { parent, title, icon, iconUrl, blocks }) {
   if (state.pages[key]) { log.skip(`Seite ${title} existiert bereits`); return state.pages[key]; }
   if (OPT.dryRun) { log.ok(`[dry-run] Seite ${title} — ${blocks?.length ?? 0} Blöcke`); return `dry-${key}`; }
+
+  // Externes Icon (das Novera-Logo) wenn vorhanden, sonst das Emoji.
+  const pageIcon = iconUrl
+    ? { type: "external", external: { url: iconUrl } }
+    : { type: "emoji", emoji: icon };
 
   const page = await withRetry(
     () => notion.pages.create({
       parent: { type: "page_id", page_id: parent },
       properties: { title: { title: rt(title) } },
-      icon: { type: "emoji", emoji: icon },
+      icon: pageIcon,
       ...(blocks ? { children: blocks.slice(0, 100) } : {}),
     }),
     { label: `Seite ${title}` }
@@ -473,8 +486,15 @@ async function main() {
   /* Seitengerüst zuerst — die Datenbanken brauchen ihre Elternseiten. */
   log.step("Seitengerüst anlegen");
   const hq = await createPage("hq", {
-    parent: PARENT ?? "dry", title: "NOVERA STUDIO", icon: "◆", blocks: null,
+    parent: PARENT ?? "dry",
+    title: "NOVERA STUDIO",
+    icon: "◆",
+    iconUrl: URLS.logo,   // das Novera-Emblem in der Seitenleiste
+    blocks: null,
   });
+  if (!URLS.logo) {
+    warn("NOVERA_LOGO_URL nicht gesetzt — HQ bekommt ◆ statt des Logos. Siehe docs/BRANDING.md.");
+  }
   const finance = await createPage("finance", {
     parent: hq, title: "Finance", icon: "💰", blocks: null,
   });

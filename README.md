@@ -22,8 +22,9 @@ npm run build
 | **7 Seiten** | HQ · Finance · Client Records · Calendar · Files · Google Workspace · Business Tools |
 | **Beispieldaten** | ein Musterkunde mit Projekt, Aufgaben, Rechnungen, Zugängen und Anforderungen |
 
-Dazu ein Header-Widget mit Wochentag, Datum und laufender Uhr (`widget/`),
-das über GitHub Pages veröffentlicht und in Notion eingebettet wird.
+Dazu ein Header-Widget mit dem Novera-Logo, Wochentag, Datum und laufender Uhr
+(`widget/`), das über GitHub Pages veröffentlicht und in Notion eingebettet wird.
+Logo, Farben und Schriften stammen unverändert aus dem Novera-Studio-Webauftritt.
 
 ---
 
@@ -48,9 +49,11 @@ ist eine feste Formel — sie lässt sich nicht überschreiben.
 
 | Datei | Inhalt |
 |---|---|
+| [docs/NOTION-VERBINDEN.md](docs/NOTION-VERBINDEN.md) | Die zwei Wege, Notion anzubinden — und welcher wofür taugt |
 | [docs/SETUP.md](docs/SETUP.md) | Von null zum fertigen Workspace, ~10 Minuten |
 | [docs/MANUELL-EINZURICHTEN.md](docs/MANUELL-EINZURICHTEN.md) | Was die API nicht kann — mit exakten Klicks, ~30 Minuten |
 | [docs/DATENMODELL.md](docs/DATENMODELL.md) | Datenbanken, Relations, Formeln und warum sie so aussehen |
+| [docs/BRANDING.md](docs/BRANDING.md) | Logo, Farben und Schriften — Herkunft und Verwendung |
 | [docs/1PASSWORD.md](docs/1PASSWORD.md) | Vault-Struktur und Übernahme von Kundenzugängen |
 | [docs/QUALITAETSKONTROLLE.md](docs/QUALITAETSKONTROLLE.md) | Jede Anforderung mit dem Ort, an dem sie sitzt |
 
@@ -71,7 +74,8 @@ scripts/
     notion.mjs          Client, Wiederholversuche, State, Fehler-Isolation
     seed.mjs            Beispieldaten
 widget/
-  index.html            Header mit laufender Uhr, ohne externe Abhängigkeiten
+  index.html            Header mit Logo und laufender Uhr, ohne externe Aufrufe
+  brand/                Logo, Emblem, Favicon und die beiden Marken-Schriften
 ```
 
 ---

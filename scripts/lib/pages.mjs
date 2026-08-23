@@ -59,17 +59,22 @@ export function hqBlocks({ db, pages, urls }) {
     );
 
   return compact([
-    /* ── HEADER ─────────────────────────────────────────────────────── */
-    h1("NOVERA STUDIO"),
-    parts([["Business Command Center", { color: "gray" }]]),
-
-    urls.clock
-      ? embed(urls.clock, "Wochentag · Datum · Uhrzeit — läuft live")
-      : manualSlot(
-          "Live-Uhr fehlt noch",
-          "Widget-URL in NOVERA_CLOCK_URL setzen und den Builder erneut laufen lassen, " +
-            "oder hier /embed einfügen. Details in docs/MANUELL-EINZURICHTEN.md, Schritt 1."
-        ),
+    /* ── HEADER ─────────────────────────────────────────────────────────
+     * Liegt das Widget vor, trägt es Logo, Wortmarke und Untertitel bereits.
+     * Eine zusätzliche Überschrift wäre dann dieselbe Aussage zweimal.
+     */
+    ...(urls.clock
+      ? [embed(urls.clock, "Novera Studio · Wochentag, Datum und Uhrzeit — läuft live")]
+      : [
+          h1("NOVERA STUDIO"),
+          parts([["Business Command Center", { color: "gray" }]]),
+          manualSlot(
+            "Live-Uhr und Logo fehlen noch",
+            "Widget veröffentlichen, NOVERA_CLOCK_URL setzen und den Builder erneut " +
+              "laufen lassen. Dann steht hier der Novera-Header mit laufender Uhr. " +
+              "Siehe docs/BRANDING.md."
+          ),
+        ]),
 
     divider(),
 
