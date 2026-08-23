@@ -20,6 +20,7 @@ npm run build
 | **150 Properties** | inklusive 15 Relationspaare, 15 Formeln, 10 Rollups |
 | **50 Ansichten** | Today, Overdue, High Priority, Follow Up, Pipeline, Timeline … |
 | **7 Seiten** | HQ · Finance · Client Records · Calendar · Files · Google Workspace · Business Tools |
+| **Ambiente-Licht** | Cover, getönte Sektionsbänder, weiche Lichtwolken — abschaltbar über `NOVERA_AMBIENT=off` |
 | **Beispieldaten** | ein Musterkunde mit Projekt, Aufgaben, Rechnungen, Zugängen und Anforderungen |
 
 Dazu zwei Widgets in `widget/`, veröffentlicht über GitHub Pages und in Notion
@@ -79,7 +80,7 @@ scripts/
 widget/
   index.html            Header: Logo, Analoguhr, Digitaluhr, Datum
   focus.html            Fokus-Timer, 25/5, über URL-Parameter anpassbar
-  brand/                Logo, Emblem, Favicon und die beiden Marken-Schriften
+  brand/                Logo, Emblem, Favicon, Ambiente-Cover, Marken-Schriften
 ```
 
 ---

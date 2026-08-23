@@ -48,6 +48,47 @@ einen orangen Akzent — der war geraten und ist raus.
 
 ---
 
+## Ambiente-Licht
+
+Auf Wunsch liegt über dem monochromen Grundgerüst eine warme Lichtstimmung in
+Violett und Rosé. Sie ist bewusst als **Licht** gebaut, nicht als Farbanstrich:
+große Radien, niedrige Deckkraft, keine Flächen. Der Text bleibt überall auf
+demselben dunklen Grund.
+
+An drei Stellen:
+
+| Wo | Was |
+|---|---|
+| HQ-Seite | Cover-Bild — Violett links, Rosé rechts, warmer Schimmer unten |
+| Sektionsbänder | `purple_background` statt `gray_background` |
+| Widgets | zwei große Lichtwolken hinter der Karte, langsam wandernd |
+
+Schalter in `.env`:
+
+```
+NOVERA_AMBIENT=on     # Standard
+NOVERA_AMBIENT=off    # durchgehend monochrom
+```
+
+Bei `off` verschwinden Cover und Tönung; das Ergebnis ist exakt der vorherige
+Zustand. In den Widgets steuert `?ambient=off` dasselbe.
+
+Das Licht in den Widgets wandert über 54 bzw. 68 Sekunden — langsam genug, dass
+es nicht auffällt, während man auf die Seite schaut. Wer im System
+Bewegungsreduzierung eingeschaltet hat, bekommt das Licht ohne Wandern.
+
+**Zur Einordnung:** Deine Marke ist monochrom, und die ursprüngliche Vorgabe
+lautete „dezente Akzentfarbe, nicht bunt". Das Ambiente ist deshalb ein Aufsatz
+mit Schalter, keine Änderung der Marke. Logo, Wortmarke, Uhrzeit und alle
+Statusfarben bleiben unverändert.
+
+### Cover neu erzeugen
+
+Die Quelle ist `widget/brand/cover.svg`, ausgeliefert wird `cover.jpg`
+(1500 × 600, ~40 KB). Nach einer Änderung am SVG neu rendern — jedes Werkzeug,
+das SVG zu JPEG macht, genügt. JPEG statt PNG, weil das feine Korn im Bild die
+PNG-Kompression zunichtemacht: dieselbe Fläche wären über 1 MB.
+
 ## Wo Farbe im Workspace trotzdem vorkommt
 
 Drei Stellen, bewusst:

@@ -35,8 +35,17 @@ export const parts = (segments, color = "default") => ({
  * Designvorlage. Bleibt eine echte Überschrift (statt eines Callouts),
  * damit Inhaltsverzeichnis, Suche und die Mobilansicht sie als Gliederung
  * erkennen.
+ *
+ * Die Tönung hängt am Ambiente-Schalter: mit Ambiente ein gedämpftes
+ * Violett, ohne das neutrale Grau. Notion lässt nur die eigene Palette zu,
+ * feinere Abstufungen sind nicht möglich.
  */
-export const section = (t) => h2(t, "gray_background");
+let sectionColor = "gray_background";
+
+/** Wird vom Builder vor dem Seitenaufbau gesetzt. */
+export const setSectionColor = (color) => { sectionColor = color; };
+
+export const section = (t) => h2(t, sectionColor);
 
 export const divider = () => ({ divider: {} });
 

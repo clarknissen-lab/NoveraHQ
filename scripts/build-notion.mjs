@@ -19,6 +19,8 @@
  *   NOVERA_SPOTIFY_URL      Spotify-Playlist
  *   NOVERA_GCAL_EMBED_URL   Google-Calendar-Einbettung
  *   NOVERA_DRIVE_URL        Drive-Hauptordner
+ *   NOVERA_AMBIENT          "on" (Standard) oder "off" — Ambiente-Licht:
+ *                           Cover auf dem HQ und violett getönte Sektionsbänder
  *
  * Flags:
  *   --no-seed     ohne Beispieldaten
@@ -41,7 +43,7 @@ import { DATABASES, DB_BY_KEY } from "./lib/schema.mjs";
 import { VIEWS, buildViewConfiguration } from "./lib/views.mjs";
 import { SEED, SEED_ORDER } from "./lib/seed.mjs";
 import * as P from "./lib/pages.mjs";
-import { h1, p as para } from "./lib/blocks.mjs";
+import { h1, p as para, setSectionColor } from "./lib/blocks.mjs";
 
 /* ────────────────────────────────────────────────────────────── Optionen */
 
@@ -71,7 +73,19 @@ const URLS = {
   spotifyEmbed: process.env.NOVERA_SPOTIFY_URL || null,
   googleCalendarEmbed: process.env.NOVERA_GCAL_EMBED_URL || null,
   driveRoot: process.env.NOVERA_DRIVE_URL || null,
+
+  // Ambiente-Cover liegt neben dem Widget.
+  cover: process.env.NOVERA_CLOCK_URL
+    ? process.env.NOVERA_CLOCK_URL.replace(/\/?$/, "/") + "brand/cover.jpg"
+    : null,
 };
+
+/**
+ * Ambiente-Licht: Cover auf der HQ-Seite und violett getönte Sektionsbänder.
+ * Mit NOVERA_AMBIENT=off bleibt der Workspace durchgehend monochrom.
+ */
+const AMBIENT = (process.env.NOVERA_AMBIENT || "on").toLowerCase() !== "off";
+setSectionColor(AMBIENT ? "purple_background" : "gray_background");
 
 /** Notion-IDs kommen mal mit Bindestrichen, mal als URL. Beides zulassen. */
 function normalizeId(raw) {
@@ -313,7 +327,7 @@ async function createViews() {
 
 /* ═════════════════════════════════════════════════════════════ 7. SEITEN */
 
-async function createPage(key, { parent, title, icon, iconUrl, blocks }) {
+async function createPage(key, { parent, title, icon, iconUrl, coverUrl, blocks }) {
   if (state.pages[key]) { log.skip(`Seite ${title} existiert bereits`); return state.pages[key]; }
   if (OPT.dryRun) { log.ok(`[dry-run] Seite ${title} — ${blocks?.length ?? 0} Blöcke`); return `dry-${key}`; }
 
@@ -327,6 +341,7 @@ async function createPage(key, { parent, title, icon, iconUrl, blocks }) {
       parent: { type: "page_id", page_id: parent },
       properties: { title: { title: rt(title) } },
       icon: pageIcon,
+      ...(coverUrl ? { cover: { type: "external", external: { url: coverUrl } } } : {}),
       ...(blocks ? { children: blocks.slice(0, 100) } : {}),
     }),
     { label: `Seite ${title}` }
@@ -498,7 +513,8 @@ async function main() {
     parent: PARENT ?? "dry",
     title: "NOVERA STUDIO",
     icon: "◆",
-    iconUrl: URLS.logo,   // das Novera-Emblem in der Seitenleiste
+    iconUrl: URLS.logo,                          // Novera-Emblem in der Seitenleiste
+    coverUrl: AMBIENT ? URLS.cover : null,       // Ambiente-Licht über dem Titel
     blocks: null,
   });
   if (!URLS.logo) {
@@ -560,6 +576,7 @@ async function main() {
   console.log(`  Datenbanken: ${Object.keys(state.databases).length}`);
   console.log(`  Ansichten:   ${Object.keys(state.views).length}`);
   console.log(`  Seiten:      ${Object.keys(state.pages).filter((k) => k !== "hqFilled").length}`);
+  console.log(`  Ambiente:    ${AMBIENT ? "an" : "aus"}`);
 
   if (warnings.length) {
     console.log(`\n\x1b[33m  ${warnings.length} Hinweis(e):\x1b[0m`);

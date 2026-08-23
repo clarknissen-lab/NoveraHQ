@@ -169,8 +169,9 @@ liefert sie — zusammen mit Logo, Wortmarke und dem Fokus-Timer.
 NOVERA_CLOCK_URL=https://clarknissen-lab.github.io/NoveraHQ/
 ```
 
-Daraus leitet der Builder auch das Seiten-Icon (`brand/favicon.svg`) und den
-Fokus-Timer (`focus.html`) ab — die musst du nicht einzeln eintragen.
+Daraus leitet der Builder auch das Seiten-Icon (`brand/favicon.svg`), den
+Fokus-Timer (`focus.html`) und das Ambiente-Cover (`brand/cover.jpg`) ab — die
+musst du nicht einzeln eintragen.
 
 Sprache und Zeitformat über die URL:
 
@@ -179,6 +180,14 @@ Sprache und Zeitformat über die URL:
 | `…/?lang=de` | Deutsch, 24 Stunden |
 | `…/?lang=en` | Englisch, 12 Stunden |
 | `…/focus.html?work=50&break=10` | Timer mit 50/10 statt 25/5 |
+| `…/?ambient=off` | ohne Ambiente-Licht |
+
+Das Ambiente-Licht — Cover auf dem HQ, violett getönte Sektionsbänder, weiche
+Lichtwolken in den Widgets — lässt sich in `.env` abschalten:
+
+```
+NOVERA_AMBIENT=off
+```
 
 ---
 

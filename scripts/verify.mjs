@@ -22,7 +22,7 @@ const STATE = new URL("../.novera-state.json", import.meta.url).pathname;
 
 /* ─────────────────────────────────────────────── Notion-Nachbau */
 
-const store = { dataSources: {}, databases: {}, pages: {}, views: [], blocks: [], records: [] };
+const store = { dataSources: {}, databases: {}, pages: {}, views: [], blocks: [], records: [], covers: [], headingColors: {} };
 const problems = [];
 let counter = 0;
 const nextId = (p) => `${p}-${String(++counter).padStart(4, "0")}`;
@@ -216,6 +216,7 @@ const server = createServer((req, res) => {
           }
         }
       }
+      if (payload.cover) store.covers.push(payload.cover?.external?.url ?? "?");
       store.pages[id] = { id, children: (payload.children ?? []).length };
       countBlocks(payload.children ?? []);
       return send({ object: "page", id });
@@ -263,6 +264,9 @@ function countBlocks(blocks) {
           }
         }
       }
+    }
+    if (/^heading_[123]$/.test(type) && inner.color) {
+      store.headingColors[inner.color] = (store.headingColors[inner.color] ?? 0) + 1;
     }
     if (type === "embed" && !inner.url) problems.push("Embed ohne URL.");
     if (type === "bookmark" && !inner.url) problems.push("Bookmark ohne URL.");
@@ -315,6 +319,8 @@ server.listen(0, "127.0.0.1", () => {
     console.log(`  Seiten:    ${Object.keys(store.pages).length}`);
     console.log(`  Blöcke:    ${store.blocks.length}`);
     console.log(`  Datensätze: ${store.records.length} (davon ${linkedRecords()} Verknüpfungen gesetzt)`);
+    console.log(`  Cover:     ${store.covers.length}`);
+    console.log(`  Sektionsbänder: ${Object.entries(store.headingColors).map(([c,n])=>c+" x"+n).join(", ") || "—"}`);
 
     /* Die Prüfungen aus der Qualitätskontrolle, Abschnitt 32 des Auftrags. */
     console.log("\n  Verknüpfungen:");
