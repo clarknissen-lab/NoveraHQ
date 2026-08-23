@@ -1,0 +1,34 @@
+# Veröffentlicht widget/ als GitHub Page.
+# Ergebnis-URL: https://<user>.github.io/<repo>/
+# Diese URL kommt in NOVERA_CLOCK_URL und wird im HQ-Header eingebettet.
+name: Deploy widget to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["widget/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: widget
+      - id: deployment
+        uses: actions/deploy-pages@v4

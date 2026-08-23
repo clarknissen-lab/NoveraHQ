@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Novera Studio — Command Center Header</title>
+<style>
+  /* Dark by default: das Widget sitzt in einem dunklen Notion-Workspace.
+     Notion kann keine Theme-Info an ein Embed weitergeben — deshalb folgt es
+     der Systemeinstellung und fällt sonst auf Dark zurück. */
+  :root {
+    --bg:        #0f0f0f;
+    --surface:   #191919;
+    --line:      #2a2a2a;
+    --text:      #ededed;
+    --muted:     #8a8a8a;
+    --accent:    #d98442;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg:      #ffffff;
+      --surface: #f7f7f5;
+      --line:    #e6e6e3;
+      --text:    #1a1a1a;
+      --muted:   #6b6b6b;
+      --accent:  #c2703a;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-feature-settings: "tnum" 1, "cv05" 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 900px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .brand { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+  .mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .mark .dot { color: var(--accent); font-size: 15px; line-height: 1; }
+
+  .sub {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .when { text-align: right; display: flex; flex-direction: column; gap: 4px; }
+
+  .clock {
+    font-size: 42px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .clock .sec { color: var(--muted); font-size: 24px; }
+
+  .date { font-size: 13px; color: var(--muted); }
+  .weekday { color: var(--accent); font-weight: 600; }
+
+  /* Notion-Embeds werden oft schmal gezogen — dann untereinander. */
+  @media (max-width: 560px) {
+    body { padding: 12px; }
+    .card { flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px; }
+    .when { text-align: left; }
+    .clock { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <div class="mark"><span class="dot">◆</span><span>Novera Studio</span></div>
+      <div class="sub">Business Command Center</div>
+    </div>
+    <div class="when">
+      <div class="clock" id="clock" aria-live="off">--:--<span class="sec">:--</span></div>
+      <div class="date"><span class="weekday" id="weekday">—</span> · <span id="date">—</span></div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Sprache über ?lang=de|en steuerbar, sonst Browsersprache.
+  var params = new URLSearchParams(location.search);
+  var lang = params.get("lang") || (navigator.language || "de").slice(0, 2);
+  var locale = lang === "en" ? "en-US" : "de-DE";
+  var hour12 = params.get("h12") === "1" || (lang === "en" && params.get("h12") !== "0");
+
+  var elClock   = document.getElementById("clock");
+  var elWeekday = document.getElementById("weekday");
+  var elDate    = document.getElementById("date");
+
+  var dayFmt  = new Intl.DateTimeFormat(locale, { weekday: "long" });
+  var dateFmt = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" });
+
+  function pad(n) { return n < 10 ? "0" + n : String(n); }
+
+  function render() {
+    var now = new Date();
+
+    var h = now.getHours();
+    var suffix = "";
+    if (hour12) {
+      suffix = h < 12 ? " AM" : " PM";
+      h = h % 12 || 12;
+    }
+
+    elClock.innerHTML =
+      (hour12 ? h : pad(h)) + ":" + pad(now.getMinutes()) +
+      '<span class="sec">:' + pad(now.getSeconds()) + suffix + "</span>";
+
+    elWeekday.textContent = dayFmt.format(now);
+    elDate.textContent = dateFmt.format(now);
+  }
+
+  render();
+
+  // Auf die volle Sekunde einschwingen, danach im Sekundentakt. Ein reines
+  // setInterval(1000) driftet über Stunden sichtbar ab.
+  setTimeout(function tick() {
+    render();
+    setTimeout(tick, 1000 - (Date.now() % 1000));
+  }, 1000 - (Date.now() % 1000));
+
+  // Nach Ruhezustand oder Tabwechsel sofort nachziehen statt bis zum
+  // nächsten Tick eine falsche Zeit zu zeigen.
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) render();
+  });
+})();
+</script>
+</body>
+</html>
