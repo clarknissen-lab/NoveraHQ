@@ -149,15 +149,49 @@ const FX = {
     'if(or(format(prop("Status")) == "Sent", format(prop("Status")) == "Open", format(prop("Status")) == "Overdue"), prop("Amount"), 0)',
   invoicePaid: 'format(prop("Status")) == "Paid"',
 
-  /** Projektfortschritt als Balken — spiegelt den Rollup "Progress". */
+  /**
+   * Projektfortschritt als Punktreihe — spiegelt den Rollup "Progress".
+   * Punkte statt Blockbalken: im Dunkelmodus deutlich ruhiger, und die Reihe
+   * bleibt auch in Board-Karten und auf dem Telefon lesbar.
+   */
   projectProgressBar:
     'if(empty(prop("Progress")), "—", ' +
-    'slice("██████████", 0, round(prop("Progress") * 10)) + ' +
-    'slice("──────────", 0, 10 - round(prop("Progress") * 10)) + ' +
+    'slice("●●●●●●●●●●", 0, round(prop("Progress") * 10)) + ' +
+    'slice("○○○○○○○○○○", 0, 10 - round(prop("Progress") * 10)) + ' +
     '"  " + format(round(prop("Progress") * 100)) + "%")',
 
   /** Konstante. Verhindert baulich, dass jemand hier ein Klartext-Passwort einträgt. */
   passwordNotice: '"🔐 Stored in 1Password"',
+
+  /* ── Countdown ────────────────────────────────────────────────────────
+   * Zwei Schritte statt einer Monsterformel: erst die Zahl, dann der Text.
+   * Die Zahl ist zusätzlich sortier- und filterbar.
+   *
+   * Beide Daten werden über formatDate/parseDate auf den reinen Tag gekürzt.
+   * Ohne das rechnet dateBetween mit Uhrzeiten: "morgen 09:00" wäre von
+   * "heute 14:00" nur 19 Stunden entfernt und damit 0 Tage — also "Heute".
+   */
+  daysLeft: (dateProp) =>
+    `if(empty(prop("${dateProp}")), 0, dateBetween(` +
+    `parseDate(formatDate(prop("${dateProp}"), "YYYY-MM-DD")), ` +
+    `parseDate(formatDate(now(), "YYYY-MM-DD")), "days"))`,
+
+  /** Lesbarer Countdown. `doneStates` sind die Status, bei denen nichts mehr drängt. */
+  countdown: (dateProp, doneStates, doneLabel) => {
+    const tests = doneStates.map((st) => `format(prop("Status")) == "${st}"`);
+    // Notion verlangt bei or() mindestens zwei Argumente — bei nur einem
+    // Status steht die Bedingung deshalb direkt da.
+    const isDone = tests.length === 1 ? tests[0] : `or(${tests.join(", ")})`;
+    return (
+      `if(empty(prop("${dateProp}")), "", ` +
+      `if(${isDone}, "${doneLabel}", ` +
+      `if(prop("Days Left") < 0, "Überfällig · " + format(abs(prop("Days Left"))) + ` +
+      `if(abs(prop("Days Left")) == 1, " Tag", " Tage"), ` +
+      `if(prop("Days Left") == 0, "Heute", ` +
+      `if(prop("Days Left") == 1, "Morgen", ` +
+      `"in " + format(prop("Days Left")) + " Tagen")))))`
+    );
+  },
 
   /** Client: nächster Kontakt fällig? */
   clientFollowUpDue:
@@ -231,9 +265,15 @@ export const DATABASES = [
       Revenue: rollup("Invoices", "Amount Paid", "sum"),
       "Open Amount": rollup("Invoices", "Amount Open", "sum"),
     },
-    // Liest das Rollup "Progress" — muss deshalb nach den Rollups laufen.
+    formulas: {
+      "Days Left": formula(FX.daysLeft("Deadline")),
+    },
+    // Lesen das Rollup "Progress" bzw. die Formel "Days Left".
     lateFormulas: {
       "Progress Bar": formula(FX.projectProgressBar),
+      Countdown: formula(
+        FX.countdown("Deadline", ["Completed", "Cancelled"], "Abgeschlossen")
+      ),
     },
   },
 
@@ -263,6 +303,11 @@ export const DATABASES = [
       "Done?": formula(FX.taskDone),
       "Overdue?": formula(FX.taskOverdue),
       Time: formula(FX.taskTime),
+      "Days Left": formula(FX.daysLeft("Due Date")),
+    },
+    // Liest "Days Left" — deshalb einen Durchlauf später.
+    lateFormulas: {
+      Deadline: formula(FX.countdown("Due Date", ["Done"], "Erledigt")),
     },
   },
 
@@ -290,6 +335,10 @@ export const DATABASES = [
       "Amount Paid": formula(FX.invoicePaidAmount),
       "Amount Open": formula(FX.invoiceOpenAmount),
       "Paid?": formula(FX.invoicePaid),
+      "Days Left": formula(FX.daysLeft("Due Date")),
+    },
+    lateFormulas: {
+      Countdown: formula(FX.countdown("Due Date", ["Paid", "Draft"], "Bezahlt")),
     },
   },
 

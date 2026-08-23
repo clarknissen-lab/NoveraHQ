@@ -17,14 +17,15 @@ npm run build
 | | |
 |---|---|
 | **11 Datenbanken** | Clients · Projects · Tasks · Invoices · Expenses · Client Access · Website Requirements · Client Communication · Ideas · Notes · Knowledge |
-| **144 Properties** | inklusive 15 Relationspaare, 9 Formeln, 10 Rollups |
+| **150 Properties** | inklusive 15 Relationspaare, 15 Formeln, 10 Rollups |
 | **50 Ansichten** | Today, Overdue, High Priority, Follow Up, Pipeline, Timeline … |
 | **7 Seiten** | HQ · Finance · Client Records · Calendar · Files · Google Workspace · Business Tools |
 | **Beispieldaten** | ein Musterkunde mit Projekt, Aufgaben, Rechnungen, Zugängen und Anforderungen |
 
-Dazu ein Header-Widget mit dem Novera-Logo, Wochentag, Datum und laufender Uhr
-(`widget/`), das über GitHub Pages veröffentlicht und in Notion eingebettet wird.
-Logo, Farben und Schriften stammen unverändert aus dem Novera-Studio-Webauftritt.
+Dazu zwei Widgets in `widget/`, veröffentlicht über GitHub Pages und in Notion
+eingebettet: der **Header** mit Novera-Logo, Analog- und Digitaluhr, Wochentag
+und Datum — und ein **Fokus-Timer** (25/5, anpassbar über die URL). Logo, Farben
+und Schriften stammen unverändert aus dem Novera-Studio-Webauftritt.
 
 ---
 
@@ -74,7 +75,8 @@ scripts/
     notion.mjs          Client, Wiederholversuche, State, Fehler-Isolation
     seed.mjs            Beispieldaten
 widget/
-  index.html            Header mit Logo und laufender Uhr, ohne externe Aufrufe
+  index.html            Header: Logo, Analoguhr, Digitaluhr, Datum
+  focus.html            Fokus-Timer, 25/5, über URL-Parameter anpassbar
   brand/                Logo, Emblem, Favicon und die beiden Marken-Schriften
 ```
 

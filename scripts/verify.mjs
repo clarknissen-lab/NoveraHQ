@@ -54,9 +54,44 @@ function applyProperties(dsId, properties, phase) {
       }
     }
 
-    if (type === "formula" && !config.formula?.expression) {
-      problems.push(`${ds.name}: Formel "${name}" ohne Ausdruck.`);
-      continue;
+    if (type === "formula") {
+      const expr = config.formula?.expression;
+      if (!expr) {
+        problems.push(`${ds.name}: Formel "${name}" ohne Ausdruck.`);
+        continue;
+      }
+
+      const open = (expr.match(/\(/g) || []).length;
+      const close = (expr.match(/\)/g) || []).length;
+      if (open !== close) {
+        problems.push(`${ds.name}: Formel "${name}" hat ${open} öffnende und ${close} schließende Klammern.`);
+        continue;
+      }
+
+      // or()/and() mit nur einem Argument lehnt Notion ab.
+      for (const m of expr.matchAll(/\b(or|and)\(/g)) {
+        let depth = 0, args = 1, i = m.index + m[0].length;
+        for (; i < expr.length; i++) {
+          const c = expr[i];
+          if (c === "(") depth++;
+          else if (c === ")") { if (depth === 0) break; depth--; }
+          else if (c === "," && depth === 0) args++;
+        }
+        if (args < 2) {
+          problems.push(`${ds.name}: Formel "${name}" ruft ${m[1]}() mit nur einem Argument auf.`);
+        }
+      }
+
+      // Jede referenzierte Property muss zu diesem Zeitpunkt existieren —
+      // sonst stimmt die Reihenfolge der Durchläufe nicht.
+      for (const m of expr.matchAll(/prop\("([^"]+)"\)/g)) {
+        const refName = m[1];
+        if (refName !== name && !ds.properties[refName]) {
+          problems.push(`${ds.name}: Formel "${name}" liest "${refName}" — existiert zu diesem Zeitpunkt noch nicht.`);
+        }
+      }
+      // Kein continue: die Property muss unten trotzdem registriert werden,
+      // sonst finden spätere Rollups und Formeln sie nicht.
     }
 
     if (ds.properties[name] && phase !== "create") {

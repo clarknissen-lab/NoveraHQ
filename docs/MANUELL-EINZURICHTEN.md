@@ -51,17 +51,21 @@ Du zeigst nur noch, wo welche Ansicht erscheinen soll. Das sind drei Klicks pro 
 
 | Abschnitt | Datenbank | Ansicht | Spalten |
 |---|---|---|---|
-| Today → High Priority | Tasks | `High Priority` | Task Name, Due Date, Client |
+| Today → High Priority | Tasks | `High Priority` | Task Name, Deadline, Client |
 | Today → Today's Schedule | Tasks | `Today` | Time, Task Name, Client, Project |
-| Overdue | Tasks | `Overdue` | Task Name, Due Date, Client |
-| Next | Tasks | `Upcoming` | Task Name, Due Date, Project |
-| Active Projects | Projects | `Active` | Project Name, Client, Deadline, Progress Bar, Open Tasks |
+| Overdue | Tasks | `Overdue` | Task Name, Deadline, Client |
+| Next | Tasks | `Upcoming` | Task Name, Deadline, Project |
+| Active Projects | Projects | `Active` | Project Name, Client, Countdown, Progress Bar, Open Tasks |
 | Clients → Active Clients | Clients | `Active Clients` | Client Name, Status, Next Contact, Revenue |
 | Clients → Client Access | Clients | `Active Clients` | Client Name, Access Entries |
 | Notes & Ideas → Recent Notes | Notes | `Recent` | Note, Date |
 | Notes & Ideas → Idea Inbox | Ideas | `Inbox` | Idea, Category |
 
 Bei den ersten vier lohnt **•••** → **Limit** → `5` — sonst wird das Dashboard lang.
+
+> Die Spalte **Deadline** (bei Projekten **Countdown**) schreibt den Rest der
+> Frist aus: „Überfällig · 3 Tage", „Heute", „Morgen", „in 5 Tagen". Sie ersetzt
+> das rohe Datum — man sieht auf einen Blick, was drängt.
 
 **Auf `Finance` — 4 Stück**
 

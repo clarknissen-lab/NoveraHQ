@@ -60,6 +60,11 @@ Drei Stellen, bewusst:
 3. **Emojis als Seitensymbole** in der Seitenleiste. Ein Symbol je Bereich,
    damit die Navigation auf einen Blick funktioniert.
 
+Der Fortschritt der Projekte läuft als Punktreihe (`●●●●●●○○○○ 60 %`) statt als
+Blockbalken — im Dunkelmodus deutlich ruhiger. Die Sektionsköpfe im Workspace
+sind Überschriften mit getöntem Hintergrund, nicht Callouts: so bleiben sie für
+Inhaltsverzeichnis, Suche und Mobilansicht echte Gliederung.
+
 Wenn du Punkt 3 lieber ganz monochrom hättest: Notion hat einen eigenen Satz
 einfarbiger Strichsymbole. Seite öffnen → auf das Icon klicken → Reiter **Icons**
 → Farbe **Gray**. Zwei Klicks je Seite. Der Builder setzt sie nicht automatisch,
@@ -92,6 +97,25 @@ Ist keine gesetzt, bekommt das HQ ein `◆` und der Builder weist am Ende darauf
 > und damit der einfachste Weg.
 
 ---
+
+## Die beiden Widgets
+
+| Datei | Was |
+|---|---|
+| `widget/index.html` | Header: Logo, Wortmarke, Analoguhr, Digitaluhr, Wochentag, Datum |
+| `widget/focus.html` | Fokus-Timer: 25/5, Ring als Fortschritt, Rundenzähler |
+
+Beide sind eigenständig — keine externen Aufrufe, keine Schriften von fremden
+Servern. Der Chrom-Verlauf liegt auf Logo und Zeitanzeige.
+
+Die Analoguhr hat bewusst keine Ziffern: die genaue Zeit steht daneben, das
+Zifferblatt liefert nur den Blick fürs Ungefähre. Stunden- und Minutenzeiger
+laufen weich mit, damit 10:30 nicht aussieht, als stünde der Stundenzeiger
+exakt auf der 10.
+
+Der Timer rechnet mit einem Zeitstempel statt mit einem Zähler. Deshalb stimmt
+die Restzeit auch dann noch, wenn der Tab im Hintergrund lag oder der Rechner
+geschlafen hat.
 
 ## Der Header
 

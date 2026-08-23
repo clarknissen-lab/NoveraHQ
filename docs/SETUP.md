@@ -61,9 +61,9 @@ Der Lauf legt an:
 | Was | Menge |
 |---|---|
 | Datenbanken | 11 |
-| Properties | 144 |
+| Properties | 150 |
 | Relations (Paare) | 15 |
-| Rollups und Formeln | 19 |
+| Rollups und Formeln | 25 |
 | Ansichten | 50 |
 | Seiten | 7 + Beispieldaten |
 
@@ -110,6 +110,16 @@ Für 12-Stunden-Anzeige `?lang=de&h12=1`.
 Sobald die Seite steht, liegt auch das Logo öffentlich unter
 `…/brand/favicon.svg` — der Builder benutzt es als Seiten-Icon, sodass das
 Novera-Monogramm in der Notion-Seitenleiste steht.
+
+Unter derselben Adresse liegt der **Fokus-Timer** (`…/focus.html`). Auch den
+bindet der Builder selbst ein, sobald `NOVERA_CLOCK_URL` gesetzt ist. Längen
+lassen sich über die URL anpassen:
+
+| URL | Ergebnis |
+|---|---|
+| `…/focus.html` | 25 Minuten Arbeit, 5 Pause, alle 4 Runden 15 Minuten |
+| `…/focus.html?work=50&break=10` | 50 Minuten Arbeit, 10 Pause |
+| `…/focus.html?work=25&break=5&long=20&every=3` | lange Pause schon nach 3 Runden |
 
 ---
 

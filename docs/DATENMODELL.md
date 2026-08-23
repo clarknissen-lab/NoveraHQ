@@ -1,6 +1,6 @@
 # Datenmodell
 
-Elf Datenbanken, 144 Properties, 15 Relationspaare. Definiert in
+Elf Datenbanken, 150 Properties, 15 Relationspaare. Definiert in
 `scripts/lib/schema.mjs`.
 
 ---
@@ -50,9 +50,13 @@ in der falschen Reihenfolge schlägt der Aufbau fehl.
 |---|---|---|
 | 1 | Datenbanken + Basis-Properties | Grundlage |
 | 2 | Relations | brauchen die `data_source_id` des Ziels aus Pass 1 |
-| 3 | Formeln | z.B. `Done?`, `Amount Paid` — lesen nur Basis-Properties |
+| 3 | Formeln | z.B. `Done?`, `Amount Paid`, `Days Left` — lesen nur Basis-Properties |
 | 4 | Rollups | lesen die Formeln aus Pass 3 über die Relations aus Pass 2 |
-| 5 | Formeln auf Rollups | `Progress Bar` liest das Rollup `Progress` aus Pass 4 |
+| 5 | Formeln auf Formeln und Rollups | `Progress Bar` liest das Rollup `Progress`, `Deadline` liest `Days Left` |
+
+`npm run verify` prüft diese Reihenfolge: Jede Formel wird gegen die zu diesem
+Zeitpunkt vorhandenen Properties gehalten. Liest eine Formel etwas, das noch
+nicht existiert, bricht der Prüflauf ab.
 
 Zwischen Pass 5 und den Beispieldaten liest der Builder alle Property-Typen neu
 ein. Ohne diesen Schritt kennt er die in Pass 2 entstandenen Relations nicht und
@@ -94,12 +98,31 @@ Der Umweg um die größte Rollup-Einschränkung: Ein Rollup „Summe der bezahlt
 Rechnungen“ existiert in Notion nicht. Diese Formeln liefern je Status entweder
 den Betrag oder 0 — die Summe darüber ist dann korrekt.
 
+### `Tasks → Days Left` und `Deadline`
+```
+Days Left:  dateBetween(parseDate(formatDate(prop("Due Date"), "YYYY-MM-DD")),
+                        parseDate(formatDate(now(),            "YYYY-MM-DD")), "days")
+
+Deadline:   "Überfällig · 3 Tage" · "Heute" · "Morgen" · "in 5 Tagen" · "Erledigt"
+```
+Zwei Schritte statt einer Monsterformel: erst die Zahl, dann der Text. Die Zahl
+ist zusätzlich sortier- und filterbar.
+
+Beide Daten werden über `formatDate`/`parseDate` auf den reinen Tag gekürzt.
+Ohne das rechnet `dateBetween` mit Uhrzeiten — „morgen 09:00" wäre von
+„heute 14:00" nur 19 Stunden entfernt und damit 0 Tage, also fälschlich „Heute".
+
+Dieselbe Spalte gibt es in `Projects` (auf `Deadline`) und `Invoices` (auf
+`Due Date`), jeweils mit den passenden Abschluss-Status.
+
 ### `Projects → Progress Bar`
 ```
-slice("██████████", 0, round(prop("Progress") * 10)) + …
+slice("●●●●●●●●●●", 0, round(prop("Progress") * 10)) +
+slice("○○○○○○○○○○", 0, 10 - round(prop("Progress") * 10)) + …
 ```
-Der Balken aus der Designvorlage. Läuft als Text, damit er in jeder Ansicht
-funktioniert — auch in Board-Karten und auf dem Telefon.
+Die Punktreihe aus der Designvorlage. Punkte statt Blockbalken, weil sie im
+Dunkelmodus deutlich ruhiger wirken. Läuft als Text und funktioniert deshalb in
+jeder Ansicht — auch in Board-Karten und auf dem Telefon.
 
 ### `Client Access → Password`
 ```
@@ -128,9 +151,9 @@ statt nach Gruppe.
 | Datenbank | Properties | davon Relations | davon berechnet |
 |---|---|---|---|
 | Clients | 27 | 7 | 6 |
-| Projects | 23 | 8 | 6 |
-| Tasks | 14 | 3 | 3 |
-| Invoices | 12 | 2 | 3 |
+| Projects | 25 | 8 | 8 |
+| Tasks | 16 | 3 | 5 |
+| Invoices | 14 | 2 | 5 |
 | Expenses | 10 | 1 | — |
 | Client Access | 11 | 1 | 1 |
 | Website Requirements | 18 | 2 | — |

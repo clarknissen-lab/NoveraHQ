@@ -30,6 +30,14 @@ export const parts = (segments, color = "default") => ({
   paragraph: { rich_text: rtParts(segments), color },
 });
 
+/**
+ * Sektionskopf mit getöntem Band — die durchgehenden Balken aus der
+ * Designvorlage. Bleibt eine echte Überschrift (statt eines Callouts),
+ * damit Inhaltsverzeichnis, Suche und die Mobilansicht sie als Gliederung
+ * erkennen.
+ */
+export const section = (t) => h2(t, "gray_background");
+
 export const divider = () => ({ divider: {} });
 
 export const quote = (t, color = "default") => ({

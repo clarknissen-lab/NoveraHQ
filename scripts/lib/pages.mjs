@@ -9,7 +9,7 @@
  */
 
 import {
-  h1, h2, h3, p, parts, divider, callout, toggle, bullet, numbered, todo,
+  h1, h2, h3, section, p, parts, divider, callout, toggle, bullet, numbered, todo,
   bookmark, embed, linkToPage, linkToDatabase, columns, linkItem, manualSlot, quote, code,
 } from "./blocks.mjs";
 import { rtParts } from "./notion.mjs";
@@ -79,7 +79,7 @@ export function hqBlocks({ db, pages, urls }) {
     divider(),
 
     /* ── QUICK ACTIONS ──────────────────────────────────────────────── */
-    h2("Quick Actions"),
+    section("Quick Actions"),
     parts([
       ["Klick öffnet die Datenbank — dort mit ", { color: "gray" }],
       ["New", { code: true }],
@@ -101,7 +101,7 @@ export function hqBlocks({ db, pages, urls }) {
     divider(),
 
     /* ── TODAY ──────────────────────────────────────────────────────── */
-    h2("Today"),
+    section("Today"),
     columns([
       [
         h3("🔴 High Priority"),
@@ -135,7 +135,7 @@ export function hqBlocks({ db, pages, urls }) {
     divider(),
 
     /* ── ACTIVE PROJECTS ────────────────────────────────────────────── */
-    h2("Active Projects"),
+    section("Active Projects"),
     manualSlot(
       "Linked View: Projects → Active",
       "/Linked view of database → Projects → Ansicht „Active“ wählen. " +
@@ -146,7 +146,7 @@ export function hqBlocks({ db, pages, urls }) {
     divider(),
 
     /* ── CLIENTS ────────────────────────────────────────────────────── */
-    h2("Clients"),
+    section("Clients"),
     columns([
       [
         h3("Active Clients"),
@@ -170,7 +170,7 @@ export function hqBlocks({ db, pages, urls }) {
     divider(),
 
     /* ── BUSINESS KPIs ──────────────────────────────────────────────── */
-    h2("Business"),
+    section("Business"),
     parts([
       [
         "Die Zahlen entstehen aus den Datenbanken. Jede Kachel bekommt eine " +
@@ -197,7 +197,7 @@ export function hqBlocks({ db, pages, urls }) {
     divider(),
 
     /* ── CALENDAR ───────────────────────────────────────────────────── */
-    h2("Calendar"),
+    section("Calendar"),
     urls.googleCalendarEmbed
       ? embed(urls.googleCalendarEmbed, "Google Calendar — zentrale Terminquelle")
       : manualSlot(
@@ -209,20 +209,35 @@ export function hqBlocks({ db, pages, urls }) {
 
     divider(),
 
-    /* ── SPOTIFY ────────────────────────────────────────────────────── */
-    h2("Now Playing"),
-    urls.spotifyEmbed
-      ? embed(urls.spotifyEmbed, "Arbeitsplaylist")
-      : manualSlot(
-          "Spotify-Playlist fehlt noch",
-          "Playlist-Link kopieren, NOVERA_SPOTIFY_URL setzen und neu bauen — oder den Link " +
-            "hier einfügen und „Embed“ wählen."
-        ),
+    /* ── FOKUS UND MUSIK ────────────────────────────────────────────── */
+    section("Fokus"),
+    columns([
+      [
+        h3("Timer"),
+        urls.focus
+          ? embed(urls.focus, "Fokuszeit — 25 Minuten Arbeit, 5 Minuten Pause")
+          : manualSlot(
+              "Fokus-Timer fehlt noch",
+              "Entsteht automatisch, sobald NOVERA_CLOCK_URL gesetzt ist — der Timer " +
+                "liegt unter derselben Adresse mit /focus.html."
+            ),
+      ],
+      [
+        h3("Now Playing"),
+        urls.spotifyEmbed
+          ? embed(urls.spotifyEmbed, "Arbeitsplaylist")
+          : manualSlot(
+              "Spotify-Playlist fehlt noch",
+              "Playlist-Link kopieren, NOVERA_SPOTIFY_URL setzen und neu bauen — oder den " +
+                "Link hier einfügen und „Embed“ wählen."
+            ),
+      ],
+    ]),
 
     divider(),
 
     /* ── NOTES & IDEAS ──────────────────────────────────────────────── */
-    h2("Notes & Ideas"),
+    section("Notes & Ideas"),
     columns([
       [
         h3("Recent Notes"),
@@ -245,7 +260,7 @@ export function hqBlocks({ db, pages, urls }) {
     divider(),
 
     /* ── NAVIGATION ─────────────────────────────────────────────────── */
-    h2("Navigation"),
+    section("Navigation"),
     columns([
       [
         h3("Workspace"),
@@ -300,21 +315,21 @@ export function clientFileBlocks() {
       "gray_background"
     ),
 
-    h2("🚀 Projects"),
+    section("🚀 Projects"),
     manualSlot(
       "Linked View: Projects, gefiltert auf diesen Kunden",
       "/Linked view of database → Projects → Filter: Client → enthält → diesen Kunden. " +
         "Im Datenbank-Template genügt der Filter „Client enthält“ + Vorlagenvariable."
     ),
 
-    h2("📋 Tasks"),
+    section("📋 Tasks"),
     manualSlot(
       "Linked View: Tasks, gefiltert auf diesen Kunden",
       "/Linked view of database → Tasks → Filter: Client → enthält → diesen Kunden, " +
         "Status ist nicht Done."
     ),
 
-    h2("🌐 Website Requirements"),
+    section("🌐 Website Requirements"),
     p("Was der Kunde für seine Website möchte — strukturiert in der Datenbank, Details hier."),
     manualSlot(
       "Linked View: Website Requirements, gefiltert auf diesen Kunden",
@@ -335,7 +350,7 @@ export function clientFileBlocks() {
       bullet("Bis wann soll die Seite live sein?"),
     ]),
 
-    h2("💬 Communication"),
+    section("💬 Communication"),
     p("Jedes relevante Gespräch als Eintrag — damit später nachvollziehbar bleibt, was besprochen wurde."),
     manualSlot(
       "Linked View: Client Communication, gefiltert auf diesen Kunden",
@@ -343,7 +358,7 @@ export function clientFileBlocks() {
         "sortiert nach Date absteigend."
     ),
 
-    h2("🔐 Access"),
+    section("🔐 Access"),
     callout(
       rtParts([
         ["Keine Klartext-Passwörter in Notion.", { bold: true }],
@@ -357,17 +372,17 @@ export function clientFileBlocks() {
       "/Linked view of database → Client Access → Filter: Client → enthält → diesen Kunden."
     ),
 
-    h2("💰 Finance"),
+    section("💰 Finance"),
     manualSlot(
       "Linked View: Invoices, gefiltert auf diesen Kunden",
       "/Linked view of database → Invoices → Filter: Client → enthält → diesen Kunden. " +
         "In der Summenzeile „Amount“ auf Sum stellen."
     ),
 
-    h2("📁 Files"),
+    section("📁 Files"),
     p("Dateien liegen in Google Drive, nicht in Notion. Der Drive-Link steht oben in den Properties."),
 
-    h2("📝 Notes"),
+    section("📝 Notes"),
     manualSlot(
       "Linked View: Notes, gefiltert auf diesen Kunden",
       "/Linked view of database → Notes → Filter: Client → enthält → diesen Kunden."
@@ -388,31 +403,31 @@ export function projectPageBlocks() {
       "gray_background"
     ),
 
-    h2("Overview"),
+    section("Overview"),
     p("Was soll am Ende herauskommen? Zwei bis drei Sätze — knapp genug, dass man sie im Vorbeigehen liest."),
 
-    h2("Tasks"),
+    section("Tasks"),
     manualSlot(
       "Linked View: Tasks, gefiltert auf dieses Projekt",
       "/Linked view of database → Tasks → Filter: Project → enthält → dieses Projekt."
     ),
 
-    h2("Client Requirements"),
+    section("Client Requirements"),
     manualSlot(
       "Linked View: Website Requirements, gefiltert auf dieses Projekt",
       "/Linked view of database → Website Requirements → Filter: Project → enthält → dieses Projekt."
     ),
 
-    h2("Files"),
+    section("Files"),
     p("Google-Drive-Ordner dieses Projekts — Link steht oben in der Property „Google Drive“."),
 
-    h2("Notes"),
+    section("Notes"),
     manualSlot(
       "Linked View: Notes, gefiltert auf dieses Projekt",
       "/Linked view of database → Notes → Filter: Project → enthält → dieses Projekt."
     ),
 
-    h2("Finance"),
+    section("Finance"),
     manualSlot(
       "Linked View: Invoices, gefiltert auf dieses Projekt",
       "/Linked view of database → Invoices → Filter: Project → enthält → dieses Projekt."
@@ -448,7 +463,7 @@ export function businessToolsBlocks() {
       parts([[note, { color: "gray" }]]),
     ]),
     divider(),
-    h2("Zuständigkeiten"),
+    section("Zuständigkeiten"),
     bullet(rtParts([["Papierkram", { bold: true }], [" — Buchhaltung. Rechnungen werden dort erstellt und verbucht. Notion zeigt nur den Status."]])),
     bullet(rtParts([["1Password", { bold: true }], [" — der einzige Ort für Passwörter, Passkeys und Recovery Codes."]])),
     bullet(rtParts([["Claude", { bold: true }], [" — Systemaufbau, Struktur, Dokumente."]])),
@@ -471,7 +486,7 @@ export function calendarPageBlocks(urls) {
         ),
     bookmark("https://calendar.google.com", "📅 Google Calendar öffnen"),
     divider(),
-    h2("Deadlines aus Notion"),
+    section("Deadlines aus Notion"),
     p("Termine stehen in Google. Deadlines stehen in Notion — hier zusammengeführt."),
     manualSlot(
       "Linked View: Projects → Deadlines",
@@ -493,7 +508,7 @@ export function filesPageBlocks(urls) {
       ? bookmark(urls.driveRoot, "📁 Novera Studio Drive")
       : bookmark("https://drive.google.com", "📁 Google Drive"),
     divider(),
-    h2("Ordnerstruktur"),
+    section("Ordnerstruktur"),
     p("Bewährte Struktur — jeder Kunde bekommt denselben Aufbau:"),
     code(
 `Novera Studio/
@@ -534,31 +549,31 @@ export function financePageBlocks({ db }) {
     bookmark("https://www.papierkram.de", "🧾 Papierkram öffnen"),
     divider(),
 
-    h2("Open Invoices"),
+    section("Open Invoices"),
     manualSlot(
       "Linked View: Invoices → Open",
       "/Linked view of database → Invoices → Ansicht „Open“. In der Summenzeile unter „Amount Open“ auf Sum stellen."
     ),
 
-    h2("Overdue Invoices"),
+    section("Overdue Invoices"),
     manualSlot(
       "Linked View: Invoices → Overdue",
       "/Linked view of database → Invoices → Ansicht „Overdue“."
     ),
 
-    h2("Paid"),
+    section("Paid"),
     manualSlot(
       "Linked View: Invoices → Paid",
       "/Linked view of database → Invoices → Ansicht „Paid“. Summenzeile „Amount Paid“ → Sum."
     ),
 
-    h2("Expenses"),
+    section("Expenses"),
     manualSlot(
       "Linked View: Expenses → This Month",
       "/Linked view of database → Expenses → Ansicht „This Month“. Summenzeile „Amount“ → Sum."
     ),
 
-    h2("Monthly Overview"),
+    section("Monthly Overview"),
     p("Umsatz minus Ausgaben je Monat. Notion rechnet das nicht von allein über Monate hinweg — " +
       "die belastbare Auswertung steht in Papierkram."),
     toggle("Wie der Monatsblick funktioniert", [
@@ -581,13 +596,13 @@ export function clientRecordsBlocks({ db }) {
     p("Die drei Datenbanken, die zur Kundenakte gehören. Im Alltag öffnest du sie über den Kunden — " +
       "hier liegen sie als Ganzes."),
     divider(),
-    h2("🔐 Client Access"),
+    section("🔐 Client Access"),
     p("Welche Zugänge existieren. Ohne Passwörter."),
     db.access ? linkToDatabase(db.access.databaseId) : null,
-    h2("🌐 Website Requirements"),
+    section("🌐 Website Requirements"),
     p("Was der Kunde für seine Website möchte — und was ausdrücklich nicht."),
     db.requirements ? linkToDatabase(db.requirements.databaseId) : null,
-    h2("💬 Client Communication"),
+    section("💬 Client Communication"),
     p("Gesprächsprotokoll je Kunde."),
     db.communication ? linkToDatabase(db.communication.databaseId) : null,
   ]);

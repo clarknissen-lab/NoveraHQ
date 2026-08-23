@@ -15,6 +15,7 @@
  * Optional:
  *   NOVERA_CLOCK_URL        URL des Uhr-Widgets (GitHub Pages)
  *   NOVERA_LOGO_URL         Logo als Seiten-Icon; wird sonst aus NOVERA_CLOCK_URL abgeleitet
+ *                           (der Fokus-Timer wird ebenfalls daraus abgeleitet)
  *   NOVERA_SPOTIFY_URL      Spotify-Playlist
  *   NOVERA_GCAL_EMBED_URL   Google-Calendar-Einbettung
  *   NOVERA_DRIVE_URL        Drive-Hauptordner
@@ -59,6 +60,10 @@ const URLS = {
     (process.env.NOVERA_CLOCK_URL
       ? process.env.NOVERA_CLOCK_URL.replace(/\/?$/, "/") + "brand/favicon.svg"
       : null),
+  // Der Fokus-Timer liegt neben dem Uhr-Widget unter derselben Adresse.
+  focus: process.env.NOVERA_CLOCK_URL
+    ? process.env.NOVERA_CLOCK_URL.replace(/\/?$/, "/") + "focus.html"
+    : null,
   spotifyEmbed: process.env.NOVERA_SPOTIFY_URL || null,
   googleCalendarEmbed: process.env.NOVERA_GCAL_EMBED_URL || null,
   driveRoot: process.env.NOVERA_DRIVE_URL || null,
