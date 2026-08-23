@@ -1,62 +1,137 @@
 # Setup
 
-Vom leeren Notion zum fertigen Novera Studio OS. Rechne mit 10 Minuten.
+Vom leeren Notion zum fertigen Novera Studio OS. Rechne mit 15 Minuten.
+
+Der Ablauf ist immer derselbe:
+
+```
+1. Node installieren      einmalig
+2. Repo holen             einmalig
+3. Integration in Notion  einmalig
+4. Seite freigeben        ← hier gehen die meisten schief
+5. .env ausfüllen
+6. npm run check          sagt dir, ob alles passt
+7. npm run build          baut den Workspace
+8. Handgriffe in Notion   siehe MANUELL-EINZURICHTEN.md
+```
 
 ---
 
-## Schritt 1 — Notion-Integration anlegen
+## 1 — Node installieren
+
+Der Builder ist ein Skript. Zum Ausführen braucht es Node.
+
+Prüfen, ob es schon da ist — Terminal öffnen (macOS: *Terminal*, Windows:
+*PowerShell*) und eingeben:
+
+```bash
+node --version
+```
+
+Kommt eine Zahl ab `v18`, bist du fertig. Kommt „command not found", lade die
+**LTS**-Version von [nodejs.org](https://nodejs.org) und installiere sie.
+Danach das Terminal einmal schließen und neu öffnen.
+
+---
+
+## 2 — Repo holen
+
+```bash
+git clone https://github.com/clarknissen-lab/NoveraHQ.git
+cd NoveraHQ
+npm install
+```
+
+Ohne Git: auf GitHub **Code → Download ZIP**, entpacken, im Terminal in den
+Ordner wechseln (`cd` und den Ordner ins Fenster ziehen), dann `npm install`.
+
+---
+
+## 3 — Integration in Notion anlegen
 
 1. [notion.so/my-integrations](https://www.notion.so/my-integrations) öffnen
 2. **New integration**
 3. Name: `Novera Builder`
 4. Associated workspace: dein Novera-Workspace
 5. Type: **Internal**
-6. **Save**, dann **Configure integration settings** → **Internal Integration Secret** → **Show** → kopieren
+6. **Save**
+7. **Configure** → **Internal Integration Secret** → **Show** → kopieren
 
-Das Secret beginnt mit `ntn_`. Es ist ein Passwort — es gehört in 1Password und
-niemals in einen Commit. `.gitignore` blockt `.env` bereits.
+Das Secret beginnt mit `ntn_`. Es ist ein Passwort — es gehört in 1Password.
 
-**Berechtigungen prüfen:** unter *Capabilities* müssen **Read**, **Update** und
-**Insert content** aktiv sein. Ohne *Insert content* kann der Builder nichts anlegen.
+Unter **Capabilities** müssen **Read**, **Update** und **Insert content**
+aktiv sein. Ohne *Insert content* kann der Builder nichts anlegen.
 
 ---
 
-## Schritt 2 — Elternseite anlegen und freigeben
+## 4 — Seite anlegen und freigeben
 
-Der Builder braucht eine Seite, unter der er baut.
+**Das ist der Schritt, an dem es am häufigsten hakt.** Notion zeigt einer
+Integration ausschließlich Seiten, die ausdrücklich für sie freigegeben wurden.
+Ohne diesen Schritt findet der Builder die Seite nicht — obwohl sie da ist.
 
 1. In Notion eine neue leere Seite anlegen, z.B. `Novera`
-2. Auf der Seite oben rechts **•••** → **Connections** → **Connect to** → `Novera Builder`
-3. Seiten-ID aus der URL kopieren:
-
-```
-https://www.notion.so/Novera-24f1a0b3c4d5e6f7a8b9c0d1e2f3a4b5
-                            └──────── das ist die ID ────────┘
-```
-
-Die ID kannst du mit oder ohne Bindestriche einsetzen — auch die komplette URL
-funktioniert, der Builder holt sich die ID selbst heraus.
-
-> Ohne Schritt 2.2 bricht der Lauf mit `object_not_found` ab. Das ist der mit
-> Abstand häufigste Fehler: die Integration sieht ausschließlich Seiten, die
-> ausdrücklich mit ihr geteilt wurden.
+2. Oben rechts auf **•••**
+3. **Connections** (Verbindungen) → **Connect to** → `Novera Builder`
+4. Die Adresse der Seite kopieren — **•••** → **Copy link**
 
 ---
 
-## Schritt 3 — Bauen
+## 5 — .env ausfüllen
 
 ```bash
-git clone https://github.com/clarknissen-lab/NoveraHQ.git
-cd NoveraHQ
-npm install
+cp .env.example .env
+```
 
-export NOTION_TOKEN="ntn_..."
-export NOTION_PARENT_PAGE="24f1a0b3c4d5e6f7a8b9c0d1e2f3a4b5"
+Unter Windows: `copy .env.example .env`
 
+Dann `.env` in einem Editor öffnen und die zwei Pflichtwerte eintragen:
+
+```
+NOTION_TOKEN=ntn_dein_echtes_secret
+NOTION_PARENT_PAGE=https://www.notion.so/Novera-24f1a0b3c4d5e6f7a8b9c0d1e2f3a4b5
+```
+
+Die komplette Seiten-URL genügt — der Builder holt sich die ID selbst heraus.
+
+Alles Weitere in der Datei ist optional und darf leer bleiben. Fehlt ein Wert,
+entsteht an der Stelle im Dashboard ein orange markierter Hinweis, was noch fehlt.
+
+> `.env` ist über `.gitignore` ausgeschlossen und landet nie auf GitHub.
+
+---
+
+## 6 — Verbindungstest
+
+```bash
+npm run check
+```
+
+Prüft der Reihe nach Node-Version, `.env`, Token, Seite und Schreibrecht.
+Beim ersten Problem bricht er ab und sagt konkret, was zu tun ist:
+
+```
+✓ Node 22.14.0
+✓ .env gelesen (6 Einträge)
+✓ Token gefunden (ntn_abc…)
+✓ Elternseite 24f1a0b3…
+✓ Token gültig — Integration „Novera Builder"
+✓ Seite erreichbar — „Novera"
+✓ Schreibrecht vorhanden
+
+  Alles bereit.
+  Jetzt bauen:  npm run build
+```
+
+---
+
+## 7 — Bauen
+
+```bash
 npm run build
 ```
 
-Der Lauf legt an:
+Dauert ein bis zwei Minuten. Der Lauf legt an:
 
 | Was | Menge |
 |---|---|
@@ -67,21 +142,8 @@ Der Lauf legt an:
 | Ansichten | 50 |
 | Seiten | 7 + Beispieldaten |
 
-### Optionale Einstellungen
-
-```bash
-export NOVERA_CLOCK_URL="https://clarknissen-lab.github.io/NoveraHQ/"   # Header mit Logo und Live-Uhr
-export NOVERA_SPOTIFY_URL="https://open.spotify.com/embed/playlist/…"   # Arbeitsplaylist
-export NOVERA_GCAL_EMBED_URL="https://calendar.google.com/calendar/embed?src=…"
-export NOVERA_DRIVE_URL="https://drive.google.com/drive/folders/…"
-```
-
-`NOVERA_LOGO_URL` musst du nicht setzen — der Builder leitet die Adresse des
-Logos aus `NOVERA_CLOCK_URL` ab und setzt sie als Icon der HQ-Seite. Details in
-[BRANDING.md](BRANDING.md).
-
-Ist eine davon nicht gesetzt, entsteht an der Stelle ein orange markierter
-Platzhalter mit der Anleitung — nichts geht kaputt, es fehlt nur der Inhalt.
+Am Ende steht eine Zusammenfassung und, falls etwas nicht durchging, eine Liste
+unter **Hinweise**. Der Builder bricht nicht beim ersten Problem ab.
 
 ### Flags
 
@@ -93,37 +155,34 @@ npm run build:dry             # nichts schreiben, nur prüfen
 
 ---
 
-## Schritt 4 — Live-Uhr veröffentlichen
+## 8 — Widget veröffentlichen
 
-Notion hat keine Uhr, die von selbst weiterläuft. Das Widget in `widget/` liefert
-sie — zusammen mit dem Novera-Logo und der Wortmarke.
+Notion hat keine Uhr, die von selbst weiterläuft. Das Widget in `widget/`
+liefert sie — zusammen mit Logo, Wortmarke und dem Fokus-Timer.
 
 1. Im Repo: **Settings** → **Pages** → Source: **GitHub Actions**
 2. Nach `main` pushen — der Workflow `pages.yml` veröffentlicht `widget/`
 3. Die Seite liegt dann unter `https://clarknissen-lab.github.io/NoveraHQ/`
-4. `NOVERA_CLOCK_URL` auf diese URL setzen und `npm run build` erneut laufen lassen —
-   oder die URL direkt im HQ per `/embed` einfügen
+4. In `.env` eintragen und noch einmal bauen:
 
-Deutsche Beschriftung und 24-Stunden-Anzeige: `?lang=de` an die URL hängen.
-Für 12-Stunden-Anzeige `?lang=de&h12=1`.
+```
+NOVERA_CLOCK_URL=https://clarknissen-lab.github.io/NoveraHQ/
+```
 
-Sobald die Seite steht, liegt auch das Logo öffentlich unter
-`…/brand/favicon.svg` — der Builder benutzt es als Seiten-Icon, sodass das
-Novera-Monogramm in der Notion-Seitenleiste steht.
+Daraus leitet der Builder auch das Seiten-Icon (`brand/favicon.svg`) und den
+Fokus-Timer (`focus.html`) ab — die musst du nicht einzeln eintragen.
 
-Unter derselben Adresse liegt der **Fokus-Timer** (`…/focus.html`). Auch den
-bindet der Builder selbst ein, sobald `NOVERA_CLOCK_URL` gesetzt ist. Längen
-lassen sich über die URL anpassen:
+Sprache und Zeitformat über die URL:
 
 | URL | Ergebnis |
 |---|---|
-| `…/focus.html` | 25 Minuten Arbeit, 5 Pause, alle 4 Runden 15 Minuten |
-| `…/focus.html?work=50&break=10` | 50 Minuten Arbeit, 10 Pause |
-| `…/focus.html?work=25&break=5&long=20&every=3` | lange Pause schon nach 3 Runden |
+| `…/?lang=de` | Deutsch, 24 Stunden |
+| `…/?lang=en` | Englisch, 12 Stunden |
+| `…/focus.html?work=50&break=10` | Timer mit 50/10 statt 25/5 |
 
 ---
 
-## Schritt 5 — Rest von Hand
+## 9 — Handgriffe in Notion
 
 Fünf Dinge kann die Notion-API nicht. Sie stehen mit exakten Klicks in
 **[MANUELL-EINZURICHTEN.md](MANUELL-EINZURICHTEN.md)**. Etwa 30 Minuten einmalig.
@@ -137,35 +196,34 @@ zweiter Lauf überspringt, was schon existiert, und ergänzt nur Fehlendes. Nach
 einem Abbruch — Netzfehler, Rate Limit — reicht ein erneutes `npm run build`.
 
 **Komplett neu bauen:** `.novera-state.json` löschen und die alten Seiten in
-Notion in den Papierkorb schieben. Ohne das Löschen entsteht ein zweiter
-Satz Datenbanken.
+Notion in den Papierkorb schieben. Ohne das Löschen entsteht ein zweiter Satz
+Datenbanken.
 
 ---
 
-## Prüflauf
+## Prüflauf ohne Notion
 
 ```bash
 npm run verify
 ```
 
 Startet lokal einen Server, der sich wie die Notion-API verhält, lässt den
-echten Builder komplett dagegen laufen und prüft danach das Ergebnis: sind alle
-Relations da, sind die Gegenseiten entstanden, finden die Rollups ihre
-Properties, passen die Filter zu den Property-Typen. Nützlich nach jeder
-Änderung am Schema — und er braucht weder Token noch Internet.
+echten Builder komplett dagegen laufen und prüft danach das Ergebnis: Relations,
+Gegenseiten, Rollup-Ziele, Formeln, Filtertypen, Blocklimits. Braucht weder
+Token noch Internet. Nützlich nach jeder Änderung am Schema.
 
 ---
 
 ## Wenn etwas klemmt
 
+`npm run check` beantwortet die meisten Fälle direkt. Darüber hinaus:
+
 | Meldung | Ursache | Lösung |
 |---|---|---|
-| `object_not_found` | Elternseite nicht mit der Integration geteilt | Schritt 2.2 |
-| `unauthorized` | Token falsch oder abgelaufen | Secret neu kopieren |
+| `object_not_found` | Seite nicht mit der Integration geteilt | Schritt 4 |
+| `unauthorized` | Token falsch oder zurückgezogen | Secret neu kopieren |
+| `restricted_resource` | *Insert content* fehlt | Capabilities, Schritt 3 |
 | `validation_error` bei Status | Workspace erlaubt keine Status-Properties über die API | Passiert automatisch: der Builder legt sie als Select an und meldet es |
-| `restricted_resource` | *Insert content* fehlt | Capabilities in den Integration-Settings |
 | `rate_limited` | zu viele Anfragen | Der Builder wartet und wiederholt selbst |
 | Lauf bricht mittendrin ab | Netz | `npm run build` erneut — er setzt auf |
-
-Der Builder bricht nicht beim ersten Problem ab. Was nicht durchgeht, sammelt er
-und listet es am Ende unter **Hinweise** auf.
+| `command not found: npm` | Node fehlt | Schritt 1 |

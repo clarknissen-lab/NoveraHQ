@@ -5,8 +5,8 @@ nicht von Hand geklickt.
 
 ```bash
 npm install
-export NOTION_TOKEN="ntn_..."
-export NOTION_PARENT_PAGE="<seiten-id>"
+cp .env.example .env     # Token und Seiten-URL eintragen
+npm run check            # sagt dir, ob alles passt
 npm run build
 ```
 
@@ -50,8 +50,8 @@ ist eine feste Formel — sie lässt sich nicht überschreiben.
 
 | Datei | Inhalt |
 |---|---|
+| [docs/SETUP.md](docs/SETUP.md) | Von null zum fertigen Workspace, Schritt für Schritt |
 | [docs/NOTION-VERBINDEN.md](docs/NOTION-VERBINDEN.md) | Die zwei Wege, Notion anzubinden — und welcher wofür taugt |
-| [docs/SETUP.md](docs/SETUP.md) | Von null zum fertigen Workspace, ~10 Minuten |
 | [docs/MANUELL-EINZURICHTEN.md](docs/MANUELL-EINZURICHTEN.md) | Was die API nicht kann — mit exakten Klicks, ~30 Minuten |
 | [docs/DATENMODELL.md](docs/DATENMODELL.md) | Datenbanken, Relations, Formeln und warum sie so aussehen |
 | [docs/BRANDING.md](docs/BRANDING.md) | Logo, Farben und Schriften — Herkunft und Verwendung |
@@ -64,6 +64,7 @@ ist eine feste Formel — sie lässt sich nicht überschreiben.
 
 ```
 scripts/
+  check.mjs             Verbindungstest: Node, .env, Token, Seite, Schreibrecht
   build-notion.mjs      Ablauf: Seiten → Datenbanken → Relations → Formeln
                         → Rollups → Ansichten → Beispieldaten → Dashboard
   verify.mjs            Prüflauf gegen einen nachgebauten Notion-Server
@@ -74,6 +75,7 @@ scripts/
     blocks.mjs          Notion-Blockbausteine
     notion.mjs          Client, Wiederholversuche, State, Fehler-Isolation
     seed.mjs            Beispieldaten
+    env.mjs             liest .env, damit keine Umgebungsvariablen nötig sind
 widget/
   index.html            Header: Logo, Analoguhr, Digitaluhr, Datum
   focus.html            Fokus-Timer, 25/5, über URL-Parameter anpassbar

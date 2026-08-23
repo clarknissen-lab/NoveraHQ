@@ -24,7 +24,7 @@ Vollständig beschrieben in **[SETUP.md](SETUP.md)**. In Kurzform:
 1. [notion.so/my-integrations](https://www.notion.so/my-integrations) → **New integration** → Internal
 2. **Internal Integration Secret** kopieren (beginnt mit `ntn_`)
 3. In Notion eine leere Seite anlegen → **•••** → **Connections** → deine Integration verbinden
-4. Seiten-ID aus der URL kopieren
+4. Seiten-URL kopieren
 5. Auf deinem Rechner:
 
 ```bash
@@ -32,8 +32,8 @@ git clone https://github.com/clarknissen-lab/NoveraHQ.git
 cd NoveraHQ
 npm install
 
-export NOTION_TOKEN="ntn_..."
-export NOTION_PARENT_PAGE="<seiten-id>"
+cp .env.example .env     # Token und Seiten-URL eintragen
+npm run check            # prüft Token, Seite und Schreibrecht
 npm run build
 ```
 

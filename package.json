@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Novera Studio OS — baut den kompletten Notion-Workspace über die Notion-API.",
   "scripts": {
+    "check": "node scripts/check.mjs",
     "build": "node scripts/build-notion.mjs",
     "build:dry": "node scripts/build-notion.mjs --dry-run",
     "verify": "node scripts/verify.mjs"
@@ -12,5 +13,7 @@
   "dependencies": {
     "@notionhq/client": "^5.26.0"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

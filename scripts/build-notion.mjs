@@ -29,10 +29,14 @@
  * werden beim nächsten Mal wiederverwendet statt doppelt angelegt.
  */
 
+import { loadEnv } from "./lib/env.mjs";
 import {
   makeClient, loadState, saveState, withRetry, addProperties,
   log, warn, warnings, errText, rt,
 } from "./lib/notion.mjs";
+
+// Zuerst .env einlesen — danach stehen die Werte in process.env.
+loadEnv();
 import { DATABASES, DB_BY_KEY } from "./lib/schema.mjs";
 import { VIEWS, buildViewConfiguration } from "./lib/views.mjs";
 import { SEED, SEED_ORDER } from "./lib/seed.mjs";
@@ -79,8 +83,8 @@ function normalizeId(raw) {
 }
 
 if (!OPT.dryRun) {
-  if (!TOKEN) fatal("NOTION_TOKEN fehlt. Siehe docs/SETUP.md, Schritt 1.");
-  if (!PARENT) fatal("NOTION_PARENT_PAGE fehlt oder ist keine gültige Notion-ID. Siehe docs/SETUP.md, Schritt 2.");
+  if (!TOKEN) fatal("NOTION_TOKEN fehlt.\n  Lege .env an (cp .env.example .env) und trage das Secret ein.\n  Danach: npm run check");
+  if (!PARENT) fatal("NOTION_PARENT_PAGE fehlt oder ist keine gültige Notion-Adresse.\n  Trage die Seiten-URL in .env ein.\n  Danach: npm run check");
 }
 
 function fatal(msg) {
@@ -573,6 +577,7 @@ main().catch((err) => {
   console.error(`\n\x1b[31m✗ Abbruch: ${errText(err)}\x1b[0m`);
   if (err?.body) console.error(err.body);
   console.error("\nBereits angelegte Objekte stehen in .novera-state.json.");
-  console.error("Ein erneuter Lauf setzt dort auf, wo es abgebrochen ist.\n");
+  console.error("Ein erneuter Lauf setzt dort auf, wo es abgebrochen ist.");
+  console.error("Wenn unklar ist, woran es liegt: npm run check\n");
   process.exit(1);
 });
