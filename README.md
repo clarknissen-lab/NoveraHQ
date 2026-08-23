@@ -1,7 +1,9 @@
-# Novera Studio OS
+# Novera HQ
 
-Ein Notion-Workspace als Business Command Center — aufgebaut über die Notion-API,
-nicht von Hand geklickt.
+Die Arbeitszentrale von Novera Studio als Notion-Workspace — aufgebaut über die
+Notion-API, nicht von Hand geklickt.
+
+Grundsatz: **so einfach wie möglich, so umfangreich wie nötig.**
 
 ```bash
 npm install
@@ -16,12 +18,12 @@ npm run build
 
 | | |
 |---|---|
-| **11 Datenbanken** | Clients · Projects · Tasks · Invoices · Expenses · Client Access · Website Requirements · Client Communication · Ideas · Notes · Knowledge |
-| **150 Properties** | inklusive 15 Relationspaare, 15 Formeln, 10 Rollups |
-| **50 Ansichten** | Today, Overdue, High Priority, Follow Up, Pipeline, Timeline … |
-| **7 Seiten** | HQ · Finance · Client Records · Calendar · Files · Google Workspace · Business Tools |
+| **9 Datenbanken** | Leads · Kunden · Projekte · Websites · Website Blueprints · Angebote · Aufgaben · Hosting & Domains · Zugänge |
+| **150 Properties** | inklusive 12 Relationspaare, 16 Formeln, 5 Rollups |
+| **49 Ansichten** | Heute · Überfällig · Heute kontaktieren · Angebote offen · Domainverlängerungen · Trichter … |
+| **5 Seiten** | HQ · Novera Tools · Novera AI · Dokumente · System |
 | **Ambiente-Licht** | Cover, getönte Sektionsbänder, weiche Lichtwolken — abschaltbar über `NOVERA_AMBIENT=off` |
-| **Beispieldaten** | ein Musterkunde mit Projekt, Aufgaben, Rechnungen, Zugängen und Anforderungen |
+| **Beispieldaten** | der komplette Ablauf: Lead, gewonnener Kunde, Projekt, Website, Blueprint, Angebot, Hosting, Zugänge |
 
 Dazu zwei Widgets in `widget/`, veröffentlicht über GitHub Pages und in Notion
 eingebettet: der **Header** mit Novera-Logo, Analog- und Digitaluhr, Wochentag
@@ -30,6 +32,14 @@ und Schriften stammen unverändert aus dem Novera-Studio-Webauftritt.
 
 ---
 
+## Der Ablauf, den das HQ abbildet
+
+```
+Lead  →  Qualifiziert  →  Erstkontakt  →  Angebot  →  Gewonnen
+                                                          ↓
+   Novera Care  ←  Hosting  ←  Live  ←  Abnahme  ←  Website  ←  Projekt
+```
+
 ## Zuständigkeiten
 
 Jede Information hat genau einen Ort. Das ist die Regel, aus der sich der ganze
@@ -37,13 +47,14 @@ Aufbau ergibt.
 
 | Werkzeug | Zuständig für |
 |---|---|
-| **Notion** | HQ, CRM, Projekte, Aufgaben, Anforderungen, Wissen, Notizen |
-| **Google Workspace** | Mail, Kalender, Dateien, Dokumente, Meetings |
-| **Papierkram** | Buchhaltung, Rechnungsstellung, Belege, Steuer |
+| **Notion** | Leads, Kunden, Projekte, Websites, Blueprints, Angebote, Aufgaben, Hosting |
+| **Google Drive** | alle Dateien — Notion hält nur den Ordnerlink |
+| **Papierkram** | Buchhaltung, Rechnungen, Belege, Steuer |
 | **1Password** | Passwörter, Passkeys, Recovery Codes |
 
-In Notion steht **nie** ein Passwort. Die Property `Password` in *Client Access*
-ist eine feste Formel — sie lässt sich nicht überschreiben.
+Deshalb gibt es in Notion **keine Finanzdatenbank** und **kein einziges Passwort**.
+Die Property `Passwort` in *Zugänge* ist eine feste Formel — sie lässt sich nicht
+überschreiben.
 
 ---
 
@@ -70,9 +81,9 @@ scripts/
                         → Rollups → Ansichten → Beispieldaten → Dashboard
   verify.mjs            Prüflauf gegen einen nachgebauten Notion-Server
   lib/
-    schema.mjs          die 11 Datenbanken, in fünf Durchläufen
-    views.mjs           die 50 Ansichten mit Filtern und Sortierungen
-    pages.mjs           HQ-Dashboard, Kundenakte, Projektseite, Bereichsseiten
+    schema.mjs          die 9 Datenbanken, in fünf Durchläufen
+    views.mjs           die 49 Ansichten mit Filtern und Sortierungen
+    pages.mjs           Dashboard, Kundenakte, Projekt-, Blueprint- und Angebotsvorlage
     blocks.mjs          Notion-Blockbausteine
     notion.mjs          Client, Wiederholversuche, State, Fehler-Isolation
     seed.mjs            Beispieldaten

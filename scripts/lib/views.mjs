@@ -1,361 +1,378 @@
 /**
  * Ansichten je Datenbank.
  *
- * Filter benutzen dasselbe Format wie die Data-Source-Query. Relative Datums-
- * operatoren (`past_week`, `this_week`, `next_week`) rechnet Notion selbst aus —
- * dadurch bleibt "Today" und "Overdue" ohne Automatisierung dauerhaft korrekt.
- *
- * Property-IDs (für group_by) werden erst zur Laufzeit aufgelöst, deshalb steht
- * hier nur der Property-NAME in `groupByProperty`.
+ * Relative Datumsoperatoren (`past_week`, `this_week`, `next_week`) rechnet
+ * Notion selbst aus. Dadurch bleiben "Heute" und "Überfällig" dauerhaft
+ * korrekt, ohne dass irgendetwas nachgeführt werden muss.
  */
 
-/** Fälligkeit heute: von heute 00:00 bis morgen 00:00. */
-const DUE_TODAY = {
+const HEUTE = {
   and: [
-    { property: "Due Date", date: { on_or_after: "today" } },
-    { property: "Due Date", date: { before: "tomorrow" } },
+    { property: "Deadline", date: { on_or_after: "today" } },
+    { property: "Deadline", date: { before: "tomorrow" } },
   ],
 };
 
-const NOT_DONE = { property: "Status", status: { does_not_equal: "Done" } };
+const OFFEN = { property: "Status", status: { does_not_equal: "Erledigt" } };
 
 export const VIEWS = {
-  /* ═══════════════════════════════════════════════════════════════ TASKS */
-  tasks: [
+  /* ═════════════════════════════════════════════════════════════ LEADS */
+  leads: [
     {
-      name: "Today",
+      name: "Neue Leads",
       type: "table",
-      filter: { and: [NOT_DONE, DUE_TODAY] },
-      sorts: [
-        { property: "Due Date", direction: "ascending" },
-        { property: "Priority", direction: "ascending" },
-      ],
-      description: "Alles, was heute ansteht. Nach Uhrzeit sortiert.",
+      filter: { property: "Status", status: { equals: "Neuer Lead" } },
+      sorts: [{ property: "Lead Score", direction: "descending" }],
+      description: "Frisch gefunden, noch nicht bewertet.",
     },
     {
-      name: "Overdue",
+      name: "Heute kontaktieren",
       type: "table",
       filter: {
-        and: [NOT_DONE, { property: "Due Date", date: { before: "today" } }],
+        and: [
+          { property: "Status", status: { does_not_equal: "Gewonnen" } },
+          { property: "Status", status: { does_not_equal: "Verloren" } },
+          { property: "Nächstes Follow-up", date: { on_or_before: "today" } },
+        ],
       },
-      sorts: [{ property: "Due Date", direction: "ascending" }],
-      description: "Überfällig — sollte möglichst leer sein.",
+      sorts: [{ property: "Priorität", direction: "ascending" }],
+      description: "Follow-up ist fällig oder überfällig.",
     },
     {
-      name: "High Priority",
+      name: "Follow-ups",
+      type: "table",
+      filter: { property: "Status", status: { equals: "Follow-up" } },
+      sorts: [{ property: "Nächstes Follow-up", direction: "ascending" }],
+    },
+    {
+      name: "Angebote offen",
       type: "table",
       filter: {
-        and: [NOT_DONE, { property: "Priority", select: { equals: "High" } }],
+        or: [
+          { property: "Status", status: { equals: "Angebot" } },
+          { property: "Status", status: { equals: "Verhandlung" } },
+        ],
       },
-      sorts: [{ property: "Due Date", direction: "ascending" }],
+      sorts: [{ property: "Nächstes Follow-up", direction: "ascending" }],
     },
     {
-      name: "This Week",
-      type: "table",
-      filter: { and: [NOT_DONE, { property: "Due Date", date: { this_week: {} } }] },
-      sorts: [{ property: "Due Date", direction: "ascending" }],
-    },
-    {
-      name: "Upcoming",
-      type: "table",
-      filter: {
-        and: [NOT_DONE, { property: "Due Date", date: { on_or_after: "today" } }],
-      },
-      sorts: [{ property: "Due Date", direction: "ascending" }],
-    },
-    {
-      name: "Inbox",
-      type: "table",
-      filter: { property: "Status", status: { equals: "Inbox" } },
-      sorts: [{ timestamp: "created_time", direction: "descending" }],
-      description: "Unsortiert reingeworfen — hier wird triagiert.",
-    },
-    {
-      name: "By Status",
+      name: "Trichter",
       type: "board",
       groupByProperty: "Status",
       groupByType: "status",
-      filter: { property: "Status", status: { does_not_equal: "Done" } },
-      sorts: [{ property: "Due Date", direction: "ascending" }],
+      description: "Der gesamte Vertriebsweg auf einen Blick.",
     },
     {
-      name: "Calendar",
-      type: "calendar",
-      dateProperty: "Due Date",
-      filter: NOT_DONE,
-    },
-    {
-      name: "Completed",
+      name: "Gewonnen",
       type: "table",
-      filter: { property: "Status", status: { equals: "Done" } },
-      sorts: [{ property: "Completed Date", direction: "descending" }],
+      filter: { property: "Status", status: { equals: "Gewonnen" } },
+      sorts: [{ property: "Letzter Kontakt", direction: "descending" }],
     },
-    { name: "All Tasks", type: "table", sorts: [{ property: "Due Date", direction: "ascending" }] },
+    {
+      name: "Verloren",
+      type: "table",
+      filter: { property: "Status", status: { equals: "Verloren" } },
+    },
+    { name: "Alle Leads", type: "table", sorts: [{ property: "Lead Score", direction: "descending" }] },
   ],
 
-  /* ════════════════════════════════════════════════════════════ PROJECTS */
-  projects: [
+  /* ════════════════════════════════════════════════════════════ KUNDEN */
+  kunden: [
     {
-      name: "Active",
+      name: "Aktive Kunden",
       type: "table",
-      filter: { property: "Status", status: { equals: "Active" } },
+      filter: {
+        or: [
+          { property: "Status", status: { equals: "Aktiver Kunde" } },
+          { property: "Status", status: { equals: "Projekt läuft" } },
+          { property: "Status", status: { equals: "Wartung" } },
+        ],
+      },
+      sorts: [{ property: "Firmenname", direction: "ascending" }],
+    },
+    {
+      name: "Novera Care",
+      type: "table",
+      filter: { property: "Novera Care", checkbox: { equals: true } },
+      sorts: [{ property: "Firmenname", direction: "ascending" }],
+      description: "Laufende Betreuung. Summenzeile zeigt den Monatsumsatz.",
+    },
+    {
+      name: "Nach Status",
+      type: "board",
+      groupByProperty: "Status",
+      groupByType: "status",
+    },
+    { name: "Alle Kunden", type: "table", sorts: [{ property: "Firmenname", direction: "ascending" }] },
+  ],
+
+  /* ══════════════════════════════════════════════════════════ PROJEKTE */
+  projekte: [
+    {
+      name: "Aktiv",
+      type: "table",
+      filter: {
+        and: [
+          { property: "Status", status: { does_not_equal: "Abgeschlossen" } },
+          { property: "Status", status: { does_not_equal: "Pausiert" } },
+          { property: "Status", status: { does_not_equal: "Live" } },
+        ],
+      },
       sorts: [{ property: "Deadline", direction: "ascending" }],
     },
     {
-      name: "By Status",
+      name: "Nach Status",
       type: "board",
       groupByProperty: "Status",
       groupByType: "status",
       sorts: [{ property: "Deadline", direction: "ascending" }],
+      description: "Konzeption → Design → Entwicklung → Feedback → Live.",
+    },
+    {
+      name: "Kundenfeedback",
+      type: "table",
+      filter: {
+        or: [
+          { property: "Status", status: { equals: "Kundenfeedback" } },
+          { property: "Status", status: { equals: "Änderungen" } },
+        ],
+      },
+      description: "Liegt beim Kunden oder wartet auf Umsetzung.",
     },
     {
       name: "Deadlines",
       type: "table",
       filter: {
         and: [
-          { property: "Status", status: { does_not_equal: "Completed" } },
-          { property: "Status", status: { does_not_equal: "Cancelled" } },
+          { property: "Status", status: { does_not_equal: "Abgeschlossen" } },
           { property: "Deadline", date: { is_not_empty: true } },
         ],
       },
       sorts: [{ property: "Deadline", direction: "ascending" }],
     },
-    {
-      name: "Timeline",
-      type: "timeline",
-      dateProperty: "Start Date",
-      endDateProperty: "Deadline",
-    },
-    {
-      name: "Pipeline",
-      type: "table",
-      filter: {
-        or: [
-          { property: "Status", status: { equals: "Idea" } },
-          { property: "Status", status: { equals: "Planning" } },
-        ],
-      },
-    },
-    { name: "All Projects", type: "table" },
+    { name: "Zeitachse", type: "timeline", dateProperty: "Startdatum", endDateProperty: "Deadline" },
+    { name: "Alle Projekte", type: "table" },
   ],
 
-  /* ═════════════════════════════════════════════════════════════ CLIENTS */
-  clients: [
+  /* ══════════════════════════════════════════════════════════ WEBSITES */
+  websites: [
     {
-      name: "Active Clients",
-      type: "table",
-      filter: { property: "Status", status: { equals: "Active" } },
-      sorts: [{ property: "Client Name", direction: "ascending" }],
-    },
-    {
-      name: "Leads",
-      type: "table",
-      filter: {
-        or: [
-          { property: "Status", status: { equals: "Lead" } },
-          { property: "Status", status: { equals: "Contacted" } },
-        ],
-      },
-      sorts: [{ property: "Next Contact", direction: "ascending" }],
-    },
-    {
-      name: "Proposal",
-      type: "table",
-      filter: { property: "Status", status: { equals: "Proposal" } },
-      sorts: [{ property: "Next Contact", direction: "ascending" }],
-    },
-    {
-      name: "Follow Up",
-      type: "table",
-      filter: { property: "Next Contact", date: { on_or_before: "today" } },
-      sorts: [{ property: "Next Contact", direction: "ascending" }],
-      description: "Kunden, bei denen ein Kontakt fällig ist.",
-    },
-    {
-      name: "Pipeline",
-      type: "board",
-      groupByProperty: "Status",
-      groupByType: "status",
-    },
-    { name: "All Clients", type: "table", sorts: [{ property: "Client Name", direction: "ascending" }] },
-  ],
-
-  /* ════════════════════════════════════════════════════════════ INVOICES */
-  invoices: [
-    {
-      name: "Open",
-      type: "table",
-      filter: {
-        or: [
-          { property: "Status", status: { equals: "Sent" } },
-          { property: "Status", status: { equals: "Open" } },
-          { property: "Status", status: { equals: "Overdue" } },
-        ],
-      },
-      sorts: [{ property: "Due Date", direction: "ascending" }],
-    },
-    {
-      name: "Overdue",
+      name: "In Arbeit",
       type: "table",
       filter: {
         and: [
-          { property: "Status", status: { does_not_equal: "Paid" } },
-          { property: "Status", status: { does_not_equal: "Draft" } },
-          { property: "Due Date", date: { before: "today" } },
+          { property: "Status", status: { does_not_equal: "Live" } },
+          { property: "Status", status: { does_not_equal: "Wartung" } },
         ],
       },
-      sorts: [{ property: "Due Date", direction: "ascending" }],
     },
     {
-      name: "Paid",
+      name: "Vor dem Launch",
       type: "table",
-      filter: { property: "Status", status: { equals: "Paid" } },
-      sorts: [{ property: "Date", direction: "descending" }],
+      filter: {
+        or: [
+          { property: "Status", status: { equals: "Abnahme" } },
+          { property: "Status", status: { equals: "Feedback" } },
+        ],
+      },
+      description: "Steht kurz vor dem Livegang.",
     },
     {
-      name: "By Status",
+      name: "Live",
+      type: "table",
+      filter: { property: "Status", status: { equals: "Live" } },
+      sorts: [{ property: "Launchdatum", direction: "descending" }],
+    },
+    {
+      name: "Nach Status",
       type: "board",
       groupByProperty: "Status",
       groupByType: "status",
     },
-    { name: "All Invoices", type: "table", sorts: [{ property: "Date", direction: "descending" }] },
+    { name: "Alle Websites", type: "table" },
   ],
 
-  /* ════════════════════════════════════════════════════════════ EXPENSES */
-  expenses: [
-    { name: "All Expenses", type: "table", sorts: [{ property: "Date", direction: "descending" }] },
+  /* ═══════════════════════════════════════════════════════ BLUEPRINTS */
+  blueprints: [
     {
-      name: "This Month",
+      name: "Aktuelle Version",
       type: "table",
-      filter: { property: "Date", date: { past_month: {} } },
-      sorts: [{ property: "Date", direction: "descending" }],
+      filter: { property: "Status", status: { does_not_equal: "Überholt" } },
+      sorts: [{ property: "Blueprint", direction: "ascending" }],
+      description: "Ohne die überholten Stände.",
     },
     {
-      name: "Recurring",
+      name: "Freigegeben",
       type: "table",
-      filter: { property: "Recurring", select: { does_not_equal: "One-time" } },
-      sorts: [{ property: "Amount", direction: "descending" }],
-      description: "Laufende Kosten — regelmäßig auf Sinnhaftigkeit prüfen.",
+      filter: { property: "Kundenfreigabe", checkbox: { equals: true } },
+      sorts: [{ property: "Freigabedatum", direction: "descending" }],
+      description: "Der verbindliche Stand — danach wird gebaut.",
     },
     {
-      name: "By Category",
+      name: "Beim Kunden",
+      type: "table",
+      filter: { property: "Status", status: { equals: "Beim Kunden" } },
+    },
+    { name: "Alle Blueprints", type: "table" },
+  ],
+
+  /* ══════════════════════════════════════════════════════════ ANGEBOTE */
+  angebote: [
+    {
+      name: "Offen",
+      type: "table",
+      filter: {
+        or: [
+          { property: "Status", status: { equals: "Versendet" } },
+          { property: "Status", status: { equals: "Gespräch" } },
+        ],
+      },
+      sorts: [{ property: "Gültig bis", direction: "ascending" }],
+      description: "Verschickt, noch keine Entscheidung.",
+    },
+    {
+      name: "Zu erstellen",
+      type: "table",
+      filter: {
+        or: [
+          { property: "Status", status: { equals: "Entwurf" } },
+          { property: "Status", status: { equals: "Fertig" } },
+        ],
+      },
+    },
+    {
+      name: "Angenommen",
+      type: "table",
+      filter: { property: "Status", status: { equals: "Angenommen" } },
+      sorts: [{ property: "Versendet am", direction: "descending" }],
+    },
+    {
+      name: "Nach Status",
       type: "board",
-      groupByProperty: "Category",
-      groupByType: "select",
+      groupByProperty: "Status",
+      groupByType: "status",
     },
+    { name: "Alle Angebote", type: "table" },
   ],
 
-  /* ══════════════════════════════════════════════════════════════ ACCESS */
-  access: [
+  /* ══════════════════════════════════════════════════════════ AUFGABEN */
+  aufgaben: [
     {
-      name: "By Client",
+      name: "Heute",
       type: "table",
-      sorts: [{ property: "Access Entry", direction: "ascending" }],
-      description: "Alle dokumentierten Zugänge. Passwörter stehen in 1Password.",
+      filter: { and: [OFFEN, HEUTE] },
+      sorts: [
+        { property: "Deadline", direction: "ascending" },
+        { property: "Priorität", direction: "ascending" },
+      ],
     },
     {
-      name: "No 2FA",
+      name: "Überfällig",
       type: "table",
-      filter: { property: "2FA Enabled", checkbox: { equals: false } },
-      description: "Sicherheitslücken — hier sollte 2FA nachgezogen werden.",
+      filter: { and: [OFFEN, { property: "Deadline", date: { before: "today" } }] },
+      sorts: [{ property: "Deadline", direction: "ascending" }],
+      description: "Sollte im Alltag leer sein.",
     },
     {
-      name: "By Service",
+      name: "Diese Woche",
+      type: "table",
+      filter: { and: [OFFEN, { property: "Deadline", date: { this_week: {} } }] },
+      sorts: [{ property: "Deadline", direction: "ascending" }],
+    },
+    {
+      name: "Wartet auf Kunde",
+      type: "table",
+      filter: { property: "Status", status: { equals: "Wartet auf Kunde" } },
+      sorts: [{ property: "Deadline", direction: "ascending" }],
+      description: "Liegt nicht bei mir — trotzdem im Blick behalten.",
+    },
+    {
+      name: "Nach Kunde",
+      type: "table",
+      filter: OFFEN,
+      sorts: [{ property: "Deadline", direction: "ascending" }],
+      description: "Zum Gruppieren nach Kunde: ••• → Gruppieren → Kunde.",
+    },
+    {
+      name: "Nach Status",
+      type: "board",
+      groupByProperty: "Status",
+      groupByType: "status",
+      filter: OFFEN,
+    },
+    { name: "Kalender", type: "calendar", dateProperty: "Deadline", filter: OFFEN },
+    {
+      name: "Erledigt",
+      type: "table",
+      filter: { property: "Status", status: { equals: "Erledigt" } },
+      sorts: [{ property: "Deadline", direction: "descending" }],
+    },
+    { name: "Alle Aufgaben", type: "table", sorts: [{ property: "Deadline", direction: "ascending" }] },
+  ],
+
+  /* ══════════════════════════════════════════════ HOSTING & DOMAINS */
+  hosting: [
+    {
+      name: "Domainverlängerungen",
+      type: "table",
+      filter: {
+        and: [
+          { property: "Domainstatus", status: { does_not_equal: "Gekündigt" } },
+          { property: "Ablaufdatum", date: { before: "next_month" } },
+        ],
+      },
+      sorts: [{ property: "Ablaufdatum", direction: "ascending" }],
+      description: "Läuft im nächsten Monat ab — rechtzeitig verlängern.",
+    },
+    {
+      name: "Aktive Hostings",
+      type: "table",
+      filter: { property: "Domainstatus", status: { equals: "Aktiv" } },
+      sorts: [{ property: "Ablaufdatum", direction: "ascending" }],
+      description: "Summenzeile zeigt Kosten, Kundenpreis und Marge.",
+    },
+    {
+      name: "Ohne SSL",
+      type: "table",
+      filter: { property: "SSL", checkbox: { equals: false } },
+      description: "Muss vor dem Launch erledigt sein.",
+    },
+    { name: "Alle Einträge", type: "table", sorts: [{ property: "Ablaufdatum", direction: "ascending" }] },
+  ],
+
+  /* ═══════════════════════════════════════════════════════════ ZUGÄNGE */
+  zugaenge: [
+    {
+      name: "Nach Kunde",
+      type: "table",
+      filter: { property: "Status", select: { equals: "Aktiv" } },
+      sorts: [{ property: "Eintrag", direction: "ascending" }],
+      description: "Alle aktiven Zugänge. Passwörter stehen in 1Password.",
+    },
+    {
+      name: "Ohne 2FA",
+      type: "table",
+      filter: {
+        and: [
+          { property: "Status", select: { equals: "Aktiv" } },
+          { property: "2FA aktiv", checkbox: { equals: false } },
+        ],
+      },
+      description: "Sicherheitslücken — hier 2FA nachziehen.",
+    },
+    {
+      name: "Nach Service",
       type: "board",
       groupByProperty: "Service",
       groupByType: "select",
     },
-  ],
-
-  /* ═══════════════════════════════════════════════════════ REQUIREMENTS */
-  requirements: [
-    { name: "All Requirements", type: "table" },
-    {
-      name: "Open Questions",
-      type: "table",
-      filter: {
-        or: [
-          { property: "Status", status: { equals: "Open Questions" } },
-          { property: "Status", status: { equals: "In Clarification" } },
-        ],
-      },
-    },
-    {
-      name: "Confirmed",
-      type: "table",
-      filter: { property: "Status", status: { equals: "Confirmed" } },
-    },
-  ],
-
-  /* ═══════════════════════════════════════════════════ COMMUNICATION */
-  communication: [
-    { name: "Timeline", type: "table", sorts: [{ property: "Date", direction: "descending" }] },
-    {
-      name: "Follow Up",
-      type: "table",
-      filter: { property: "Follow Up", checkbox: { equals: true } },
-      sorts: [{ property: "Follow Up Date", direction: "ascending" }],
-    },
-    { name: "Calendar", type: "calendar", dateProperty: "Date" },
-  ],
-
-  /* ═══════════════════════════════════════════════════════════════ IDEAS */
-  ideas: [
-    {
-      name: "Inbox",
-      type: "table",
-      filter: { property: "Status", status: { equals: "Inbox" } },
-      sorts: [{ timestamp: "created_time", direction: "descending" }],
-    },
-    {
-      name: "By Status",
-      type: "board",
-      groupByProperty: "Status",
-      groupByType: "status",
-    },
-    {
-      name: "By Category",
-      type: "board",
-      groupByProperty: "Category",
-      groupByType: "select",
-    },
-    { name: "All Ideas", type: "table" },
-  ],
-
-  /* ═══════════════════════════════════════════════════════════════ NOTES */
-  notes: [
-    { name: "Recent", type: "table", sorts: [{ timestamp: "created_time", direction: "descending" }] },
-    {
-      name: "By Type",
-      type: "board",
-      groupByProperty: "Type",
-      groupByType: "select",
-    },
-    { name: "All Notes", type: "table" },
-  ],
-
-  /* ═══════════════════════════════════════════════════════════ KNOWLEDGE */
-  knowledge: [
-    {
-      name: "By Category",
-      type: "board",
-      groupByProperty: "Category",
-      groupByType: "select",
-      filter: { property: "Status", status: { does_not_equal: "Archived" } },
-    },
-    {
-      name: "Active",
-      type: "table",
-      filter: { property: "Status", status: { equals: "Active" } },
-      sorts: [{ property: "Title", direction: "ascending" }],
-    },
-    { name: "All Knowledge", type: "table" },
+    { name: "Alle Zugänge", type: "table" },
   ],
 };
 
 /**
- * Baut den `configuration`-Block für eine View.
- * `propertyIds` bildet Property-Name -> Property-ID ab.
+ * Baut den `configuration`-Block einer Ansicht.
+ * `propertyIds` bildet Property-Name → Property-ID ab.
  */
 export function buildViewConfiguration(view, propertyIds) {
   switch (view.type) {

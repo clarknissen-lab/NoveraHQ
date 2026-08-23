@@ -325,23 +325,33 @@ server.listen(0, "127.0.0.1", () => {
     /* Die Prüfungen aus der Qualitätskontrolle, Abschnitt 32 des Auftrags. */
     console.log("\n  Verknüpfungen:");
     const checks = [
-      ["Kunde kann mehrere Projekte haben", has("Clients", "Projects") && has("Projects", "Client")],
-      ["Projekt kann mehrere Tasks haben", has("Projects", "Tasks") && has("Tasks", "Project")],
-      ["Task hängt an Kunde und Projekt", has("Tasks", "Client") && has("Tasks", "Project")],
-      ["Kunde ↔ Rechnungen", has("Clients", "Invoices") && has("Invoices", "Client")],
-      ["Kunde ↔ Zugänge", has("Clients", "Access") && has("Client Access", "Client")],
-      ["Kunde ↔ Notizen", has("Clients", "Client Notes") && has("Notes", "Client")],
-      ["Kunde ↔ Kommunikation", has("Clients", "Communication") && has("Client Communication", "Client")],
-      ["Kunde ↔ Website Requirements", has("Clients", "Website Requirements") && has("Website Requirements", "Client")],
-      ["Projekt ↔ Rechnungen", has("Projects", "Invoices") && has("Invoices", "Project")],
-      ["Projekt ↔ Ausgaben", has("Projects", "Expenses") && has("Expenses", "Project")],
-      ["Idee ↔ Projekt", has("Projects", "Ideas") && has("Ideas", "Project")],
-      ["Notiz ↔ Task", has("Tasks", "Related Notes") && has("Notes", "Task")],
-      ["Umsatz je Kunde rechnet", has("Clients", "Revenue")],
-      ["Offene Rechnungen je Kunde rechnet", has("Clients", "Open Invoices")],
-      ["Projektfortschritt rechnet", has("Projects", "Progress")],
-      ["Passwortfeld ist eine feste Formel", propType("Client Access", "Password") === "formula"],
-      ["Beispieldaten sind tatsächlich verknüpft", linkedRecords() >= 18],
+      // Der Weg vom Lead bis zum laufenden Hosting muss durchgängig verknüpft sein.
+      ["Lead ↔ Kunde", has("Leads", "Kunde") && has("Kunden", "Lead")],
+      ["Kunde ↔ Projekte", has("Kunden", "Projekte") && has("Projekte", "Kunde")],
+      ["Kunde ↔ Angebote", has("Kunden", "Angebote") && has("Angebote", "Kunde")],
+      ["Kunde ↔ Websites", has("Kunden", "Websites") && has("Websites", "Kunde")],
+      ["Kunde ↔ Hosting & Domains", has("Kunden", "Hosting & Domains") && has("Hosting & Domains", "Kunde")],
+      ["Kunde ↔ Zugänge", has("Kunden", "Zugänge") && has("Zugänge", "Kunde")],
+      ["Kunde ↔ Aufgaben", has("Kunden", "Aufgaben") && has("Aufgaben", "Kunde")],
+      ["Projekt ↔ Websites", has("Projekte", "Websites") && has("Websites", "Projekt")],
+      ["Projekt ↔ Aufgaben", has("Projekte", "Aufgaben") && has("Aufgaben", "Projekt")],
+      ["Projekt ↔ Angebote", has("Projekte", "Angebote") && has("Angebote", "Projekt")],
+      ["Website ↔ Blueprint", has("Websites", "Blueprint") && has("Website Blueprints", "Website")],
+      ["Website ↔ Hosting", has("Websites", "Hosting") && has("Hosting & Domains", "Website")],
+
+      // Rechnende Felder
+      ["Projektfortschritt rechnet", has("Projekte", "Fortschritt")],
+      ["Angebotssumme rechnet", propType("Angebote", "Gesamtpreis") === "formula"],
+      ["Hosting-Marge rechnet", propType("Hosting & Domains", "Marge") === "formula"],
+      ["Offene Aufgaben je Kunde rechnen", has("Kunden", "Offene Aufgaben")],
+      ["Frist-Countdown bei Aufgaben", propType("Aufgaben", "Frist") === "formula"],
+      ["Domain-Countdown bei Hosting", propType("Hosting & Domains", "Ablauf") === "formula"],
+
+      // Regeln, die nicht verletzt werden dürfen
+      ["Passwortfeld ist eine feste Formel", propType("Zugänge", "Passwort") === "formula"],
+      ["Keine Finanzdatenbank in Notion", !ds("Rechnungen") && !ds("Invoices") && !ds("Ausgaben")],
+      ["Neun Datenbanken, nicht mehr", Object.keys(store.dataSources).length === 9],
+      ["Beispieldaten sind tatsächlich verknüpft", linkedRecords() >= 14],
     ];
     for (const [label, ok] of checks) {
       console.log(`    ${ok ? "\x1b[32m✓\x1b[0m" : "\x1b[31m✗\x1b[0m"} ${label}`);

@@ -1,23 +1,19 @@
 # MANUELL EINZURICHTEN
 
-Alles, was der Builder **nicht** anlegen kann — mit dem Grund, dem Ort und dem
+Alles, was der Builder nicht anlegen kann — mit dem Grund, dem Ort und dem
 genauen Handgriff.
 
-Einmalig etwa 30 Minuten. Danach läuft das System von allein.
+Einmalig etwa 25 Minuten. Danach läuft das HQ von allein.
 
 Im Workspace erkennst du jede offene Stelle an einem orangen Kasten mit 🔧.
-Wenn du ihn abgearbeitet hast, löschst du ihn.
-
-**Übersicht**
+Ist sie erledigt, löschst du den Kasten.
 
 | # | Was | Warum nicht automatisch | Dauer |
 |---|---|---|---|
-| 1 | Verknüpfte Ansichten (15×) | Kein API-Blocktyp dafür | ~12 min |
-| 2 | Datenbank-Templates (2×) | API kann keine Templates schreiben | ~10 min |
-| 3 | KPI-Zahlen | Ergeben sich aus Ansicht 1 | ~4 min |
-| 4 | Google Calendar | Einbettungs-URL ist privat | ~2 min |
-| 5 | Quick Actions als Buttons | Button-Blöcke fehlen in der API | ~5 min, optional |
-| 6 | Sidebar und Mobile | Reine Anzeigeeinstellung | ~3 min |
+| 1 | Verknüpfte Ansichten (10×) | Kein API-Blocktyp dafür | ~8 min |
+| 2 | Datenbank-Vorlagen (5×) | API kann keine Vorlagen schreiben | ~12 min |
+| 3 | Novera-Care-Umsatz | ergibt sich aus Schritt 1 | ~2 min |
+| 4 | Seitenleiste sortieren | reine Anzeigeeinstellung | ~3 min |
 
 ---
 
@@ -25,257 +21,177 @@ Wenn du ihn abgearbeitet hast, löschst du ihn.
 
 ### Warum das nicht automatisch geht
 
-Eine „Linked view of database“ ist in Notion **kein Block, den die API kennt**.
-Die API kann Absätze, Überschriften, Spalten, Callouts, Embeds und Verweise
-anlegen — aber es existiert schlicht kein Blocktyp für eine eingebettete,
-gefilterte Datenbankansicht. Notion hat das nie geöffnet.
+Eine „verknüpfte Datenbankansicht" ist in Notion **kein Block, den die API
+kennt**. Die API kann Absätze, Überschriften, Spalten, Callouts, Embeds und
+Verweise anlegen — aber es existiert schlicht kein Blocktyp für eine
+eingebettete, gefilterte Datenbankansicht.
 
-Was der Builder deshalb tut: Er legt **alle 50 Ansichten in den Datenbanken
-selbst** an — fertig gefiltert und sortiert. Du musst also nichts konfigurieren.
-Du zeigst nur noch, wo welche Ansicht erscheinen soll. Das sind drei Klicks pro Stelle.
+Was der Builder deshalb tut: Er legt **alle 49 Ansichten in den Datenbanken
+selbst** an, fertig gefiltert und sortiert. Du konfigurierst nichts. Du zeigst
+nur, wo welche Ansicht erscheinen soll.
 
-### Der Handgriff — einmal verstehen, 15× anwenden
+### Der Handgriff — einmal verstehen, zehnmal anwenden
 
 1. In den orangen Kasten klicken, Inhalt markieren, löschen
-2. `/linked` tippen → **Linked view of database** wählen
-3. Datenbank suchen und auswählen
-4. Oben erscheint eine Ansicht-Auswahl → die im Kasten genannte Ansicht wählen
-5. Bei Bedarf **•••** → **Properties** → Spalten ein-/ausblenden
+2. `/verknüpfte` tippen → **Verknüpfte Ansicht einer Datenbank**
+3. Datenbank auswählen
+4. Oben die im Kasten genannte Ansicht wählen
+5. Bei Bedarf **•••** → **Eigenschaften** → Spalten ein- und ausblenden
 
-> Wähle immer eine **vorhandene Ansicht** aus, statt neu zu filtern.
-> Änderst du später den Filter in der Datenbank, ziehen alle Einbettungen mit.
+> Immer eine **vorhandene Ansicht** wählen statt neu zu filtern. Änderst du
+> später den Filter in der Datenbank, ziehen alle Einbettungen mit.
 
-### Die Stellen
-
-**Auf `NOVERA STUDIO` (HQ) — 9 Stück**
+### Auf `NOVERA HQ`
 
 | Abschnitt | Datenbank | Ansicht | Spalten |
 |---|---|---|---|
-| Today → High Priority | Tasks | `High Priority` | Task Name, Deadline, Client |
-| Today → Today's Schedule | Tasks | `Today` | Time, Task Name, Client, Project |
-| Overdue | Tasks | `Overdue` | Task Name, Deadline, Client |
-| Next | Tasks | `Upcoming` | Task Name, Deadline, Project |
-| Active Projects | Projects | `Active` | Project Name, Client, Countdown, Progress Bar, Open Tasks |
-| Clients → Active Clients | Clients | `Active Clients` | Client Name, Status, Next Contact, Revenue |
-| Clients → Client Access | Clients | `Active Clients` | Client Name, Access Entries |
-| Notes & Ideas → Recent Notes | Notes | `Recent` | Note, Date |
-| Notes & Ideas → Idea Inbox | Ideas | `Inbox` | Idea, Category |
+| Heute · oben | Aufgaben | `Überfällig` | Aufgabe, Frist, Kunde |
+| Heute · Mitte | Aufgaben | `Heute` | Aufgabe, Uhrzeit, Kunde, Priorität |
+| Heute · unten | Leads | `Heute kontaktieren` | Unternehmen, Priorität, Sales Angle |
+| Sales · links | Leads | `Neue Leads` | Unternehmen, Lead Score, Branche |
+| Sales · rechts | Angebote | `Offen` | Angebotsname, Kunde, Gesamtpreis, Gültigkeit |
+| Projekte · oben | Projekte | `Aktiv` | Projektname, Kunde, Frist, Fortschrittsbalken, Offene Aufgaben |
+| Projekte · links | Projekte | `Kundenfeedback` | Projektname, Kunde |
+| Projekte · rechts | Websites | `Vor dem Launch` | Website, Kunde, Status |
+| Technik | Hosting & Domains | `Domainverlängerungen` | Eintrag, Domain, Ablauf |
 
-Bei den ersten vier lohnt **•••** → **Limit** → `5` — sonst wird das Dashboard lang.
+Bei den ersten drei lohnt **•••** → **Limit** → `5`.
 
-> Die Spalte **Deadline** (bei Projekten **Countdown**) schreibt den Rest der
-> Frist aus: „Überfällig · 3 Tage", „Heute", „Morgen", „in 5 Tagen". Sie ersetzt
-> das rohe Datum — man sieht auf einen Blick, was drängt.
-
-**Auf `Finance` — 4 Stück**
-
-| Abschnitt | Datenbank | Ansicht |
-|---|---|---|
-| Open Invoices | Invoices | `Open` |
-| Overdue Invoices | Invoices | `Overdue` |
-| Paid | Invoices | `Paid` |
-| Expenses | Expenses | `This Month` |
-
-**Auf `Calendar` — 2 Stück**
-
-| Abschnitt | Datenbank | Ansicht |
-|---|---|---|
-| Deadlines aus Notion | Projects | `Deadlines` |
-| Task-Kalender | Tasks | `Calendar` |
+> Die Spalte **Frist** schreibt den Rest der Zeit aus: „Überfällig · 3 Tage",
+> „Heute", „Morgen", „in 5 Tagen". Sie ersetzt das rohe Datum — man sieht sofort,
+> was drängt.
 
 ---
 
-## 2 — Datenbank-Templates
+## 2 — Datenbank-Vorlagen
 
 ### Warum das nicht automatisch geht
 
-Notion-Datenbanken haben Seitenvorlagen: ein neuer Kunde bringt sofort die
-Kundenakte mit. Die API kann Vorlagen **lesen** (`listTemplates`), aber nicht
-**schreiben**. Es gibt keinen Endpunkt dafür.
+Notion-Datenbanken haben Seitenvorlagen: Ein neuer Kunde bringt sofort die
+Kundenakte mit. Die API kann Vorlagen **lesen**, aber nicht **schreiben**.
 
-Was der Builder deshalb tut: Er hat den **Musterkunden** und das **Musterprojekt**
-mit genau dem Seitenaufbau angelegt, den die Vorlage haben soll. Du machst daraus
-in einem Zug eine echte Vorlage.
+Was der Builder deshalb tut: Er hat je einen Musterdatensatz mit genau dem
+Seitenaufbau angelegt, den die Vorlage haben soll. Du machst daraus in einem Zug
+eine echte Vorlage.
 
-### 2a — Kundenakte
+### Der Ablauf, fünfmal gleich
 
-1. **Clients** öffnen, **Muster GmbH** öffnen
-2. Klick in den Seitenkörper, `Cmd/Strg + A`, `Cmd/Strg + C`
-3. Zurück zu **Clients**. Neben dem blauen **New** auf den **▾** klicken
-4. **＋ New template**
-5. Vorlage benennen: `Kundenakte`
-6. In den Körper klicken, `Cmd/Strg + V`
-7. Die sieben 🔧-Kästen jetzt durch verknüpfte Ansichten ersetzen (Handgriff aus Schritt 1):
+1. Datenbank öffnen, den Musterdatensatz öffnen
+2. In den Seitenkörper klicken, `Cmd/Strg + A`, `Cmd/Strg + C`
+3. Zurück zur Datenbank. Neben dem blauen **Neu** auf **▾** klicken
+4. **＋ Neue Vorlage**, benennen
+5. In den Körper klicken, `Cmd/Strg + V`
+6. Orange Kästen durch verknüpfte Ansichten ersetzen (Handgriff aus Schritt 1)
+7. **← Zurück**, dann bei der Vorlage **•••** → **Als Standard festlegen**
 
-   | Abschnitt | Datenbank | Filter |
-   |---|---|---|
-   | 🚀 Projects | Projects | `Client` enthält → *leer lassen* |
-   | 📋 Tasks | Tasks | `Client` enthält → *leer lassen*, `Status` ist nicht `Done` |
-   | 🌐 Website Requirements | Website Requirements | `Client` enthält → *leer lassen* |
-   | 💬 Communication | Client Communication | `Client` enthält → *leer lassen*, sortiert `Date` absteigend |
-   | 🔐 Access | Client Access | `Client` enthält → *leer lassen* |
-   | 💰 Finance | Invoices | `Client` enthält → *leer lassen* |
-   | 📝 Notes | Notes | `Client` enthält → *leer lassen* |
+| Datenbank | Musterdatensatz | Vorlagenname | 🔧-Kästen |
+|---|---|---|---|
+| Kunden | Muster GmbH | `Kundenakte` | 6 |
+| Projekte | Website Relaunch Muster GmbH | `Website-Projekt` | 1 |
+| Website Blueprints | Muster GmbH · Blueprint | `Blueprint` | 0 |
+| Angebote | Angebot Website Muster GmbH | `Angebot` | 0 |
+| Leads | Beispiel Bäckerei | `Lead` | 0 |
 
-   > **Der entscheidende Punkt:** Beim Filter `Client enthält` erscheint in einer
-   > Vorlage die Option **„Diese Seite“ / „This page“**. Die wählen. Dann füllt
-   > sich jede neue Kundenakte automatisch mit den Daten genau dieses Kunden.
-   > Wählst du stattdessen einen konkreten Kunden aus, zeigen alle Akten dessen Daten.
+Drei der fünf Vorlagen haben gar keine Kästen — dort genügt Kopieren und Einfügen.
 
-8. Oben links **← Back**
-9. Bei der Vorlage auf **•••** → **Set as default** → **For all users**
+### Der entscheidende Punkt bei den Filtern
 
-Ab jetzt bringt jeder neue Kunde die komplette Akte mit.
+In der **Kundenakte** und im **Website-Projekt** filtern die verknüpften
+Ansichten auf den jeweiligen Datensatz. Beim Filter `Kunde enthält` erscheint in
+einer Vorlage die Option **„Diese Seite"**. Die wählen.
 
-### 2b — Projektseite
+Dann füllt sich jede neue Kundenakte automatisch mit den Daten genau dieses
+Kunden. Wählst du stattdessen einen konkreten Kunden aus, zeigen alle Akten
+dessen Daten.
 
-Dasselbe mit **Website Relaunch** in **Projects**, Vorlage `Projektseite`,
-vier 🔧-Kästen, Filter jeweils auf `Project` enthält → **Diese Seite**.
+**Kundenakte — sechs Ansichten:**
 
-### 2c — Optional: Task-Vorlagen
+| Abschnitt | Datenbank | Filter |
+|---|---|---|
+| 🚀 Projekte | Projekte | `Kunde` enthält → **Diese Seite** |
+| 📄 Angebote | Angebote | `Kunde` enthält → **Diese Seite** |
+| 🌐 Website & Blueprint | Websites | `Kunde` enthält → **Diese Seite** |
+| ✅ Aufgaben | Aufgaben | `Kunde` enthält → **Diese Seite**, `Status` ist nicht `Erledigt` |
+| ☁️ Hosting & Domain | Hosting & Domains | `Kunde` enthält → **Diese Seite** |
+| 🔐 Zugänge | Zugänge | `Kunde` enthält → **Diese Seite** |
 
-In **Tasks** lohnen zwei Vorlagen für Wiederkehrendes:
+**Website-Projekt — eine Ansicht:**
 
-- `Kundenmeeting` — Category `Client`, Priority `Medium`, im Körper eine Agenda
-- `Website-Livegang` — Category `Website`, im Körper die Launch-Checkliste aus
-  **Knowledge → Website Launch Checklist**
+| Abschnitt | Datenbank | Filter |
+|---|---|---|
+| Aufgaben | Aufgaben | `Projekt` enthält → **Diese Seite** |
+
+Die Checkliste im Projekt ist bereits fertig — Konzept, Branding, Mockups,
+Entwicklung, SEO, Qualität, Abnahme, Launch.
 
 ---
 
-## 3 — KPI-Zahlen
+## 3 — Novera-Care-Umsatz
 
 ### Warum das nicht automatisch geht
 
-Notion kann eine Zahl nicht frei auf einer Seite berechnen. Summen entstehen
-ausschließlich in der **Summenzeile einer Datenbankansicht**. Und die braucht
-eine verknüpfte Ansicht — siehe Schritt 1.
+Notion berechnet Zahlen nicht frei auf einer Seite. Summen entstehen
+ausschließlich in der **Summenzeile einer Datenbankansicht**.
 
 ### Der Handgriff
 
-Für jede Kachel im Abschnitt **Business** auf dem HQ:
+Wenn du den monatlichen Betreuungsumsatz im Blick haben willst:
 
-1. Verknüpfte Ansicht in die Kachel einfügen
-2. **•••** → **Properties** → alles ausblenden bis auf die eine Spalte
-3. Ganz unten in der Spalte auf **Calculate** klicken → Funktion wählen
-4. **•••** → **Layout** → **Show database title** aus, **Show view options** aus
+1. Auf dem HQ eine verknüpfte Ansicht einfügen → **Kunden** → Ansicht `Novera Care`
+2. **•••** → **Eigenschaften** → alles ausblenden bis auf `Firmenname` und
+   `Novera Care · Monatlich`
+3. Unter der Spalte auf **Berechnen** → **Summe**
+4. **•••** → **Layout** → Datenbanktitel und Ansichtsoptionen ausblenden
 
-| Kachel | Datenbank | Ansicht | Spalte | Calculate |
-|---|---|---|---|---|
-| Revenue | Invoices | `Paid` | Amount Paid | `Sum` |
-| Expenses | Expenses | `This Month` | Amount | `Sum` |
-| Open Invoices | Invoices | `Open` | Amount Open | `Sum` |
-| Active Clients | Clients | `Active Clients` | beliebig | `Count all` |
-| Active Projects | Projects | `Active` | beliebig | `Count all` |
-| Leads | Clients | `Leads` | beliebig | `Count all` |
-| Open Tasks | Tasks | `Upcoming` | beliebig | `Count all` |
+Dasselbe funktioniert bei **Hosting & Domains → Aktive Hostings** mit der Spalte
+`Marge` — dann siehst du, was von den Hosting-Einnahmen übrig bleibt.
 
-**Profit** rechnet Notion seitenübergreifend nicht. Zwei Wege:
-
-- **Pragmatisch:** Revenue und Expenses stehen direkt nebeneinander — die
-  Differenz liest man im Vorbeigehen.
-- **Belastbar:** Papierkram. Dort ist die Zahl ohnehin die einzige, die zählt,
-  weil sie Steuer und Abgrenzung berücksichtigt.
+Alles Weitere zu Zahlen steht in Papierkram. Notion rechnet hier bewusst nicht mit.
 
 ---
 
-## 4 — Google Calendar
+## 4 — Seitenleiste und Mobile
 
-### Warum das nicht automatisch geht
+### Seitenleiste
 
-Die Einbettungs-URL enthält deine private Kalender-ID. Die steht nirgends im Repo
-und kann auch nirgends stehen.
+Alle Seiten und Datenbanken hängen unter `NOVERA HQ`. Sinnvolle Reihenfolge per
+Drag & Drop:
 
-### Der Handgriff
+```
+NOVERA HQ
+├── Leads
+├── Kunden
+├── Projekte
+├── Websites
+├── Website Blueprints
+├── Angebote
+├── Aufgaben
+├── Hosting & Domains
+├── Zugänge
+├── Novera Tools
+├── Novera AI
+├── Dokumente
+└── System
+```
 
-1. [calendar.google.com](https://calendar.google.com) → **⚙ Einstellungen**
-2. Links den gewünschten Kalender wählen → **Kalender integrieren**
-3. Unter **Code einbetten** die URL aus dem `src="…"` des iframes kopieren
-4. Entweder:
-   - `NOVERA_GCAL_EMBED_URL` setzen und `npm run build` erneut laufen lassen, **oder**
-   - im HQ in den orangen Kasten `/embed` tippen, URL einfügen, **Embed link**
-
-Für Dark Mode `&mode=AGENDA&showTitle=0&showPrint=0&showTabs=0` anhängen — die
-Agenda-Ansicht fügt sich deutlich ruhiger ein als das Monatsraster.
-
-> **Privater Kalender:** Nur ein Kalender, der auf *öffentlich* steht, ist im
-> Embed für andere sichtbar. Für dich allein reicht es, im selben Browser in
-> deinem Google-Konto angemeldet zu sein. Stelle einen Geschäftskalender nicht
-> öffentlich, nur damit das Embed hübscher aussieht.
-
----
-
-## 5 — Quick Actions als echte Buttons *(optional)*
-
-### Warum das nicht automatisch geht
-
-Notion-Buttons sind ein eigener Blocktyp, den die API nicht anlegen kann — sie
-kennt nur die *Button-Property* innerhalb einer Datenbank, was etwas anderes ist.
-
-Aktuell führt jede Quick Action zur Datenbank; dort legst du mit **New** an.
-Das kostet einen Klick mehr. Mit einem echten Button geht es in einem.
-
-### Der Handgriff — Beispiel „New Task“
-
-1. Im HQ auf die Kachel **New Task** klicken, Inhalt löschen
-2. `/button` → **Button**
-3. Beschriftung: `New Task`
-4. **Add action** → **Add page to** → Datenbank **Tasks**
-5. **Edit page** → Vorbelegung setzen, z.B. `Status` = `Inbox`
-6. **Done**
-
-Lohnt sich vor allem für **New Task** und **New Note** — die beiden legst du am
-häufigsten an. Für den Rest genügt der Link.
-
----
-
-## 6 — Sidebar und Mobile
-
-### Sidebar
-
-Die Struktur steht bereits: alle Seiten hängen unter `NOVERA STUDIO`. Was du noch
-tun kannst:
-
-1. `NOVERA STUDIO` in der Seitenleiste mit **•••** → **Add to Favorites** —
-   dann steht es ganz oben
-2. Reihenfolge per Drag & Drop: Tasks, Projects, Clients, Client Records,
-   Calendar, Finance, Ideas, Knowledge, Notes, Files
-3. `Google Workspace` und `Business Tools` nach ganz unten
-
-**Warum es zwei Sammelseiten gibt:** `Client Records` bündelt Client Access,
-Website Requirements und Client Communication; `Finance` bündelt Invoices und
-Expenses. Notion erlaubt keiner Datenbank, Elternteil einer anderen zu sein —
-ohne die beiden Seiten lägen 11 Datenbanken flach nebeneinander in der Leiste.
+`NOVERA HQ` mit **•••** → **Zu Favoriten hinzufügen** ganz nach oben holen.
 
 ### Mobile
 
-Auf dem Telefon stapelt Notion Spalten untereinander, in der Reihenfolge der
-Seite. Die Reihenfolge auf dem HQ ist bereits danach gebaut: Header, Quick
-Actions, Today, Overdue, Projects, Clients, KPIs, Calendar, Spotify, Notizen.
+Notion stapelt Spalten auf dem Telefon untereinander, in der Reihenfolge der
+Seite. Das HQ ist bereits danach gebaut: Kopf, Schnellzugriff, Heute, Sales,
+Projekte, Technik, Fokus.
 
-1. Notion-App öffnen, `NOVERA STUDIO` auf **Favorites** setzen
-2. iOS: Seite teilen → **Zum Home-Bildschirm** — dann startet das HQ wie eine App
-3. In der App unter **Settings** → **Appearance** → **Dark**
-
-Für unterwegs reicht meist die Datenbank **Tasks** mit der Ansicht `Today`.
-Die lässt sich ebenfalls einzeln favorisieren.
-
----
-
-## 7 — Spotify
-
-Sofern `NOVERA_SPOTIFY_URL` gesetzt war, steht der Player schon. Sonst:
-
-1. In Spotify die Playlist öffnen → **•••** → **Teilen** → **Link kopieren**
-2. Im HQ in den orangen Kasten einfügen → **Create embed**
-
-Notion bettet Spotify über den offiziellen Player ein. Der spielt **30-Sekunden-
-Vorschauen**, außer du bist im selben Browser bei Spotify Premium angemeldet —
-dann laufen die vollen Titel. Das ist eine Vorgabe von Spotify, nicht von Notion,
-und lässt sich von unserer Seite nicht ändern.
+Für unterwegs genügt meist die Datenbank **Aufgaben** mit der Ansicht `Heute` —
+die lässt sich einzeln favorisieren. In der App unter **Einstellungen** →
+**Darstellung** → **Dunkel**.
 
 ---
 
 ## Wenn alles erledigt ist
 
-`docs/QUALITAETSKONTROLLE.md` durchgehen — dort steht jeder Punkt aus deiner
-Anforderungsliste mit dem Ort, an dem er im System sitzt.
+Öffne das HQ am Morgen. Du solltest sofort sehen: was überfällig ist, was heute
+ansteht, wen du kontaktieren musst, welche Projekte laufen und ob eine Domain
+demnächst abläuft.
+
+Mehr soll das Dashboard nicht.

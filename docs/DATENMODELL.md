@@ -1,110 +1,100 @@
 # Datenmodell
 
-Elf Datenbanken, 150 Properties, 15 Relationspaare. Definiert in
-`scripts/lib/schema.mjs`.
+Neun Datenbanken. Definiert in `scripts/lib/schema.mjs`.
+
+Der Grundsatz: **so einfach wie möglich, so umfangreich wie nötig.** Was sich
+über eine Relation abbilden lässt, bekommt keine eigene Datenbank.
 
 ---
 
-## Überblick
+## Der Weg durch das System
 
 ```
-                            ┌───────────┐
-                            │  CLIENTS  │
-                            └─────┬─────┘
-        ┌──────────┬──────────┬───┴───┬──────────┬──────────┐
-        │          │          │       │          │          │
-   ┌────┴────┐ ┌───┴───┐ ┌────┴───┐ ┌─┴────┐ ┌───┴────┐ ┌───┴──────┐
-   │PROJECTS │ │ TASKS │ │INVOICES│ │ACCESS│ │  COMM  │ │REQUIREM. │
-   └────┬────┘ └───┬───┘ └────┬───┘ └──────┘ └────────┘ └──────────┘
-        │          │          │
-        ├──────────┘          │        ┌───────┐   ┌───────────┐
-        ├─────────────────────┘        │ IDEAS │   │ KNOWLEDGE │
-        ├──── EXPENSES                 └───┬───┘   └───────────┘
-        ├──── NOTES ────── TASKS           │        (ohne Relation)
-        └──────────────────────────────────┘
+LEAD ──gewonnen──▶ KUNDE ──▶ PROJEKT ──▶ WEBSITE ──▶ BLUEPRINT
+                     │           │           │
+                     │           │           └──▶ HOSTING & DOMAINS
+                     │           │
+                     ├──▶ ANGEBOTE ◀────────┘
+                     ├──▶ AUFGABEN ◀─────────
+                     └──▶ ZUGÄNGE
 ```
+
+Zwölf Relationspaare, jedes genau einmal deklariert:
+
+```
+Kunden       → Leads          Lead ↔ Kunde
+Projekte     → Kunden         Kunde ↔ Projekte
+Websites     → Kunden         Kunde ↔ Websites
+Websites     → Projekte       Projekt ↔ Websites
+Blueprints   → Websites       Website ↔ Blueprint
+Angebote     → Kunden         Kunde ↔ Angebote
+Angebote     → Projekte       Projekt ↔ Angebote
+Aufgaben     → Kunden         Kunde ↔ Aufgaben
+Aufgaben     → Projekte       Projekt ↔ Aufgaben
+Hosting      → Kunden         Kunde ↔ Hosting & Domains
+Hosting      → Websites       Website ↔ Hosting
+Zugänge      → Kunden         Kunde ↔ Zugänge
+```
+
+---
+
+## Was es bewusst NICHT gibt
+
+| Weggelassen | Warum | Wo es stattdessen steht |
+|---|---|---|
+| Finanzdatenbank | Papierkram ist die Buchhaltung | Link im HQ, `Papierkram` beim Kunden |
+| Rechnungen | dito | Papierkram |
+| Branding-Datenbank | Branding entsteht immer im Blueprint | Abschnitt „Branding" im Blueprint |
+| Dokumenten-Datenbank | Google Drive ist die Ablage | `Google Drive` beim Kunden und beim Projekt |
+| Notizen-Datenbank | eine Datenbank für Freitext lohnt sich nicht | Feld `Notizen` plus Seitenkörper |
+| Kommunikations-Log | für ein Studio dieser Größe Mehraufwand | Abschnitt „Notizen" in der Kundenakte |
+
+Jede dieser Entscheidungen folgt derselben Frage: *Bringt eine eigene Datenbank
+gegenüber einem Feld oder einer Relation echten Mehrwert?* Wo die Antwort nein
+lautet, gibt es keine.
 
 ---
 
 ## Warum die Relations nur auf einer Seite stehen
 
-Notion-Relations sind **dual**: Legt man in `Tasks` eine Relation `Client` an, die
-auf `Clients` zeigt, entsteht in `Clients` automatisch die Gegenseite `Tasks`.
+Notion-Relations sind **dual**: Legt man in `Aufgaben` eine Relation `Kunde` an,
+entsteht in `Kunden` automatisch die Gegenseite `Aufgaben`.
 
 Deklariert man beide Seiten selbst, bekommt man vier Properties statt zwei — zwei
-davon halb kaputt. Deshalb steht im Schema jedes Paar **genau einmal**, auf der
-Kind-Seite (Task wählt seinen Kunden, nicht umgekehrt). Der Name der Gegenseite
-wird über `synced_property_name` festgelegt.
+davon halb kaputt. Im Schema steht deshalb jedes Paar **genau einmal**, auf der
+Kind-Seite. Der Name der Gegenseite wird über `synced_property_name` festgelegt.
 
-`npm run verify` prüft genau das: Jede Gegenseite muss existieren, und keine darf
-doppelt angelegt worden sein.
+`npm run verify` prüft genau das.
 
 ---
 
 ## Warum der Aufbau in fünf Durchläufen passiert
 
-Notion-Properties hängen voneinander ab. Die Reihenfolge ist nicht kosmetisch —
-in der falschen Reihenfolge schlägt der Aufbau fehl.
-
 | Pass | Was | Warum erst hier |
 |---|---|---|
 | 1 | Datenbanken + Basis-Properties | Grundlage |
 | 2 | Relations | brauchen die `data_source_id` des Ziels aus Pass 1 |
-| 3 | Formeln | z.B. `Done?`, `Amount Paid`, `Days Left` — lesen nur Basis-Properties |
+| 3 | Formeln | `Erledigt?`, `Gesamtpreis`, `Tage bis …` — lesen nur Basis-Properties |
 | 4 | Rollups | lesen die Formeln aus Pass 3 über die Relations aus Pass 2 |
-| 5 | Formeln auf Formeln und Rollups | `Progress Bar` liest das Rollup `Progress`, `Deadline` liest `Days Left` |
-
-`npm run verify` prüft diese Reihenfolge: Jede Formel wird gegen die zu diesem
-Zeitpunkt vorhandenen Properties gehalten. Liest eine Formel etwas, das noch
-nicht existiert, bricht der Prüflauf ab.
+| 5 | Formeln auf Formeln und Rollups | `Frist` liest `Tage bis Deadline`, `Fortschrittsbalken` liest das Rollup `Fortschritt` |
 
 Zwischen Pass 5 und den Beispieldaten liest der Builder alle Property-Typen neu
-ein. Ohne diesen Schritt kennt er die in Pass 2 entstandenen Relations nicht und
-würde die Verknüpfungen der Beispieldaten stillschweigend verwerfen.
+ein. Ohne das kennt er die in Pass 2 entstandenen Relations nicht und würde die
+Verknüpfungen der Beispieldaten stillschweigend verwerfen.
 
 ---
 
-## Die Formeln und wozu sie da sind
+## Die Formeln
 
-### `Tasks → Done?`
-```
-format(prop("Status")) == "Done"
-```
-Eine Checkbox als Grundlage für den Projektfortschritt. Notion-Rollups können
-nicht nach Status filtern, aber sie können den Anteil angehakter Checkboxen
-berechnen (`percent_checked`). Ohne diese Formel gäbe es keinen Fortschritt.
+### Countdown — `Tage bis …` und `Frist`
 
-### `Tasks → Overdue?`
 ```
-and(not(empty(prop("Due Date"))), format(prop("Status")) != "Done", prop("Due Date") < now())
-```
-Damit „überfällig“ eine Eigenschaft der Aufgabe ist und nicht nur ein Filter.
+Tage bis Deadline:  dateBetween(parseDate(formatDate(prop("Deadline"), "YYYY-MM-DD")),
+                                parseDate(formatDate(now(),            "YYYY-MM-DD")), "days")
 
-### `Tasks → Time`
+Frist:              "Überfällig · 3 Tage" · "Heute" · "Morgen" · "in 5 Tagen"
 ```
-if(empty(prop("Due Date")), "",
-   if(formatDate(prop("Due Date"), "HH:mm") == "00:00", "",
-      formatDate(prop("Due Date"), "HH:mm")))
-```
-Zieht die Uhrzeit aus `Due Date` heraus. Deshalb gibt es **kein zweites Feld
-„Time“** zum Pflegen. Aufgaben ohne Uhrzeit zeigen nichts an statt `00:00`.
 
-### `Invoices → Amount Paid` und `Amount Open`
-```
-if(format(prop("Status")) == "Paid", prop("Amount"), 0)
-if(or(… "Sent", … "Open", … "Overdue"), prop("Amount"), 0)
-```
-Der Umweg um die größte Rollup-Einschränkung: Ein Rollup „Summe der bezahlten
-Rechnungen“ existiert in Notion nicht. Diese Formeln liefern je Status entweder
-den Betrag oder 0 — die Summe darüber ist dann korrekt.
-
-### `Tasks → Days Left` und `Deadline`
-```
-Days Left:  dateBetween(parseDate(formatDate(prop("Due Date"), "YYYY-MM-DD")),
-                        parseDate(formatDate(now(),            "YYYY-MM-DD")), "days")
-
-Deadline:   "Überfällig · 3 Tage" · "Heute" · "Morgen" · "in 5 Tagen" · "Erledigt"
-```
 Zwei Schritte statt einer Monsterformel: erst die Zahl, dann der Text. Die Zahl
 ist zusätzlich sortier- und filterbar.
 
@@ -112,37 +102,61 @@ Beide Daten werden über `formatDate`/`parseDate` auf den reinen Tag gekürzt.
 Ohne das rechnet `dateBetween` mit Uhrzeiten — „morgen 09:00" wäre von
 „heute 14:00" nur 19 Stunden entfernt und damit 0 Tage, also fälschlich „Heute".
 
-Dieselbe Spalte gibt es in `Projects` (auf `Deadline`) und `Invoices` (auf
-`Due Date`), jeweils mit den passenden Abschluss-Status.
+Dieselbe Formel läuft an drei Stellen, jeweils mit anderer Datums- und
+Status-Spalte: `Aufgaben → Frist`, `Projekte → Frist`, `Angebote → Gültigkeit`
+und `Hosting & Domains → Ablauf`.
 
-### `Projects → Progress Bar`
+### `Aufgaben → Erledigt?`
 ```
-slice("●●●●●●●●●●", 0, round(prop("Progress") * 10)) +
-slice("○○○○○○○○○○", 0, 10 - round(prop("Progress") * 10)) + …
+format(prop("Status")) == "Erledigt"
 ```
-Die Punktreihe aus der Designvorlage. Punkte statt Blockbalken, weil sie im
-Dunkelmodus deutlich ruhiger wirken. Läuft als Text und funktioniert deshalb in
-jeder Ansicht — auch in Board-Karten und auf dem Telefon.
+Eine Checkbox als Grundlage für den Projektfortschritt. Notion-Rollups können
+nicht nach Status filtern, aber sie können den Anteil angehakter Checkboxen
+berechnen (`percent_checked`). Ohne diese Formel gäbe es keinen Fortschritt.
 
-### `Client Access → Password`
+### `Aufgaben → Uhrzeit`
+Zieht die Uhrzeit aus `Deadline` heraus. Deshalb gibt es **kein zweites Feld**
+für die Zeit. Aufgaben ohne Uhrzeit zeigen nichts an statt `00:00`.
+
+### `Angebote → Gesamtpreis`
 ```
-"🔐 Stored in 1Password"
+sum(prop("Websitepreis"), prop("Markenpaket"), prop("Domain"), prop("Weitere Leistungen"))
+```
+Die einmaligen Posten. **Novera Care zählt bewusst nicht hinein** — das ist ein
+monatlicher Betrag und würde die Angebotssumme verfälschen.
+
+### `Hosting & Domains → Marge`
+```
+Monatlicher Kundenpreis − Monatliche Kosten
+```
+Was an einem Hosting monatlich hängen bleibt. In der Ansicht „Aktive Hostings"
+zeigt die Summenzeile den Gesamtbetrag.
+
+### `Projekte → Fortschrittsbalken`
+```
+slice("●●●●●●●●●●", 0, round(prop("Fortschritt") * 10)) + …
+```
+Punktreihe statt Blockbalken — im Dunkelmodus deutlich ruhiger. Läuft als Text
+und funktioniert deshalb überall, auch in Board-Karten und auf dem Telefon.
+
+### `Zugänge → Passwort`
+```
+"🔐 In 1Password"
 ```
 Eine Konstante. Formeln lassen sich nicht überschreiben — damit ist es baulich
 unmöglich, hier ein Passwort einzutragen. Das ist der Zweck, nicht ein Nebeneffekt.
 
 ---
 
-## Status oder Select
+## Status ohne Emoji
 
-`status`-Properties waren über die Notion-API lange gesperrt. Der aktuelle Stand
-lässt sie zu. Falls ein Workspace das doch ablehnt, legt der Builder dieselbe
-Property als `select` mit identischen Optionen an, meldet es und schreibt alle
-Ansichtsfilter von `status` auf `select` um.
+Die Vorgabe listete die Status mit farbigen Punkten (🔵 Neuer Lead, 🟣 Qualifiziert).
+Das sind Farbangaben — und Notion-Status haben echte Farben. Die Farbe steht
+deshalb dort, wo sie hingehört: als Eigenschaft der Option.
 
-Funktional ist der Unterschied gering: `select` hat keine Gruppen
-(To-do / In progress / Complete). Board-Ansichten gruppieren dann nach Option
-statt nach Gruppe.
+Ergebnis: Filter und Formeln bleiben lesbar (`Status == "Qualifiziert"` statt
+`Status == "🟣 Qualifiziert"`), und die Farbe ist trotzdem da. Wer die Emoji im
+Namen möchte, ändert die Optionslisten oben in `schema.mjs`.
 
 ---
 
@@ -150,17 +164,15 @@ statt nach Gruppe.
 
 | Datenbank | Properties | davon Relations | davon berechnet |
 |---|---|---|---|
-| Clients | 27 | 7 | 6 |
-| Projects | 25 | 8 | 8 |
-| Tasks | 16 | 3 | 5 |
-| Invoices | 14 | 2 | 5 |
-| Expenses | 10 | 1 | — |
-| Client Access | 11 | 1 | 1 |
-| Website Requirements | 18 | 2 | — |
-| Client Communication | 8 | 2 | — |
-| Ideas | 7 | 1 | — |
-| Notes | 8 | 3 | — |
-| Knowledge | 6 | — | — |
+| Leads | 19 | 1 | 1 |
+| Kunden | 25 | 7 | 2 |
+| Projekte | 19 | 6 | 5 |
+| Websites | 15 | 3 | 1 |
+| Website Blueprints | 10 | 1 | — |
+| Angebote | 17 | 2 | 3 |
+| Aufgaben | 16 | 2 | 5 |
+| Hosting & Domains | 17 | 2 | 3 |
+| Zugänge | 11 | 1 | 1 |
 
 Relations umfassen die automatisch entstandenen Gegenseiten — deshalb hat
-`Clients` sieben, obwohl im Schema keine einzige deklariert ist.
+`Kunden` sieben, obwohl im Schema nur eine deklariert ist.

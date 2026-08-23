@@ -132,11 +132,9 @@ async function createDatabases(hqPageId) {
   log.step("Datenbanken anlegen");
 
   for (const db of DATABASES) {
-    const parentPageId = db.key === "invoices" || db.key === "expenses"
-      ? state.pages.finance
-      : ["access", "requirements", "communication"].includes(db.key)
-        ? state.pages.clientRecords
-        : hqPageId;
+    // Alle neun Datenbanken hängen direkt unter dem HQ. Bei neun Einträgen
+    // braucht die Seitenleiste keine Zwischenebene — die wäre nur ein Klick mehr.
+    const parentPageId = hqPageId;
 
     if (state.databases[db.key]?.dataSourceId) {
       log.skip(`${db.name} existiert bereits`);
@@ -441,9 +439,14 @@ async function seedData() {
     for (const record of records) {
       if (OPT.dryRun) { n++; continue; }
 
+      // Diese Datensätze bekommen einen vorbereiteten Seitenkörper und dienen
+      // damit als Vorlage für das jeweilige Datenbank-Template.
       const body =
-        dbKey === "clients" ? P.clientFileBlocks()
-        : dbKey === "projects" ? P.projectPageBlocks()
+        dbKey === "kunden" ? P.kundenakteBlocks()
+        : dbKey === "projekte" ? P.projektBlocks()
+        : dbKey === "blueprints" ? P.blueprintBlocks()
+        : dbKey === "angebote" ? P.angebotBlocks()
+        : dbKey === "leads" ? P.leadBlocks()
         : null;
 
       try {
@@ -466,39 +469,6 @@ async function seedData() {
     log.ok(`${entry.name} — ${n} Datensätze`);
   }
 
-  // Knowledge-Seiten haben einen Seitenkörper und laufen deshalb separat.
-  const kb = state.databases.knowledge;
-  if (kb && !state.seeded.knowledge) {
-    const types = propertyTypes.knowledge ?? {};
-    let n = 0;
-    for (const entry of P.KNOWLEDGE_SEED) {
-      if (OPT.dryRun) { n++; continue; }
-      const props = { Title: { title: rt(entry.title) } };
-      if (types.Category) props.Category = { select: { name: entry.category } };
-      if (types.Status) {
-        props.Status = types.Status === "select"
-          ? { select: { name: entry.status } }
-          : { status: { name: entry.status } };
-      }
-      if (types.Tags && entry.tags.length) props.Tags = { multi_select: entry.tags.map((t) => ({ name: t })) };
-
-      try {
-        await withRetry(
-          () => notion.pages.create({
-            parent: { type: "data_source_id", data_source_id: kb.dataSourceId },
-            properties: props,
-            children: entry.body.slice(0, 100),
-          }),
-          { label: `Knowledge ${entry.title}` }
-        );
-        n++;
-      } catch (err) {
-        warn(`Knowledge "${entry.title}" nicht angelegt — ${errText(err)}`);
-      }
-    }
-    if (!OPT.dryRun) { state.seeded.knowledge = true; saveState(state); }
-    log.ok(`Knowledge — ${n} Seiten`);
-  }
 }
 
 /* ══════════════════════════════════════════════════════════════ ABLAUF */
@@ -507,11 +477,11 @@ async function main() {
   console.log("\n\x1b[1m  NOVERA STUDIO OS — Notion Builder\x1b[0m");
   if (OPT.dryRun) console.log("  \x1b[33mdry-run: es wird nichts geschrieben\x1b[0m");
 
-  /* Seitengerüst zuerst — die Datenbanken brauchen ihre Elternseiten. */
+  /* Seitengerüst zuerst — die Datenbanken brauchen ihre Elternseite. */
   log.step("Seitengerüst anlegen");
   const hq = await createPage("hq", {
     parent: PARENT ?? "dry",
-    title: "NOVERA STUDIO",
+    title: "NOVERA HQ",
     icon: "◆",
     iconUrl: URLS.logo,                          // Novera-Emblem in der Seitenleiste
     coverUrl: AMBIENT ? URLS.cover : null,       // Ambiente-Licht über dem Titel
@@ -520,12 +490,6 @@ async function main() {
   if (!URLS.logo) {
     warn("NOVERA_LOGO_URL nicht gesetzt — HQ bekommt ◆ statt des Logos. Siehe docs/BRANDING.md.");
   }
-  const finance = await createPage("finance", {
-    parent: hq, title: "Finance", icon: "💰", blocks: null,
-  });
-  const clientRecords = await createPage("clientRecords", {
-    parent: hq, title: "Client Records", icon: "🗂️", blocks: null,
-  });
 
   await createDatabases(hq);
   await createRelations();
@@ -535,19 +499,13 @@ async function main() {
   if (OPT.views) await createViews(); else log.step("Ansichten übersprungen (--no-views)");
 
   /* Restliche Seiten — brauchen die Datenbank-IDs für ihre Verlinkungen. */
-  log.step("Bereichsseiten füllen");
+  log.step("Bereichsseiten anlegen");
   const db = state.databases;
 
-  await createPage("calendar", { parent: hq, title: "Calendar", icon: "📅", blocks: P.calendarPageBlocks(URLS) });
-  await createPage("files", { parent: hq, title: "Files", icon: "📁", blocks: P.filesPageBlocks(URLS) });
-  await createPage("google", { parent: hq, title: "Google Workspace", icon: "🔗", blocks: P.googleWorkspaceBlocks() });
-  await createPage("tools", { parent: hq, title: "Business Tools", icon: "🧰", blocks: P.businessToolsBlocks() });
-
-  if (!OPT.dryRun) {
-    await appendBlocks(finance, P.financePageBlocks({ db }));
-    await appendBlocks(clientRecords, P.clientRecordsBlocks({ db }));
-    log.ok("Finance und Client Records gefüllt");
-  }
+  await createPage("tools", { parent: hq, title: "Novera Tools", icon: "🔗", blocks: P.toolsBlocks() });
+  await createPage("ai", { parent: hq, title: "Novera AI", icon: "🤖", blocks: P.aiBlocks() });
+  await createPage("dokumente", { parent: hq, title: "Dokumente", icon: "📁", blocks: P.dokumenteBlocks(URLS) });
+  await createPage("system", { parent: hq, title: "System", icon: "⚙️", blocks: P.systemBlocks({ db }) });
 
   if (OPT.seed) {
     await refreshPropertyTypes();

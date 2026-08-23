@@ -1,6 +1,6 @@
 # Setup
 
-Vom leeren Notion zum fertigen Novera Studio OS. Rechne mit 15 Minuten.
+Vom leeren Notion zum fertigen Novera HQ. Rechne mit 15 Minuten.
 
 Der Ablauf ist immer derselbe:
 
@@ -135,12 +135,12 @@ Dauert ein bis zwei Minuten. Der Lauf legt an:
 
 | Was | Menge |
 |---|---|
-| Datenbanken | 11 |
+| Datenbanken | 9 |
 | Properties | 150 |
-| Relations (Paare) | 15 |
-| Rollups und Formeln | 25 |
-| Ansichten | 50 |
-| Seiten | 7 + Beispieldaten |
+| Relations (Paare) | 12 |
+| Rollups und Formeln | 21 |
+| Ansichten | 49 |
+| Seiten | 5 + Beispieldaten |
 
 Am Ende steht eine Zusammenfassung und, falls etwas nicht durchging, eine Liste
 unter **Hinweise**. Der Builder bricht nicht beim ersten Problem ab.
@@ -193,8 +193,8 @@ NOVERA_AMBIENT=off
 
 ## 9 — Handgriffe in Notion
 
-Fünf Dinge kann die Notion-API nicht. Sie stehen mit exakten Klicks in
-**[MANUELL-EINZURICHTEN.md](MANUELL-EINZURICHTEN.md)**. Etwa 30 Minuten einmalig.
+Vier Dinge kann die Notion-API nicht. Sie stehen mit exakten Klicks in
+**[MANUELL-EINZURICHTEN.md](MANUELL-EINZURICHTEN.md)**. Etwa 25 Minuten einmalig.
 
 ---
 

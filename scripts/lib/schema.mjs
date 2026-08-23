@@ -1,24 +1,31 @@
 /**
- * NOVERA STUDIO OS — Datenmodell
+ * NOVERA HQ — Datenmodell
  *
- * Der Aufbau passiert in drei Durchläufen, weil Notion Abhängigkeiten hat:
+ * Neun Datenbanken. Der Grundsatz dahinter: so einfach wie möglich, so
+ * umfangreich wie nötig. Was sich über eine Relation abbilden lässt, bekommt
+ * keine eigene Datenbank.
  *
- *   Pass 1  base          Datenbanken + einfache Properties (Text, Select, Datum, Zahl ...)
- *   Pass 2  relations     Relations — brauchen die data_source_id des Ziels, das erst nach Pass 1 existiert
- *   Pass 3  formulas      Formeln auf Basis-Properties (z.B. "Done?", "Amount Paid")
- *   Pass 4  rollups       Rollups — lesen die Formeln aus Pass 3 über die Relations aus Pass 2
- *   Pass 5  lateFormulas  Formeln, die ein Rollup lesen (z.B. der Fortschrittsbalken)
+ * Bewusst NICHT enthalten:
+ *   Finanzen      Papierkram ist die Buchhaltung. Im HQ steht nur der Link
+ *                 und der monatliche Novera-Care-Betrag beim Kunden.
+ *   Branding      Steckt im Website-Blueprint, wo es ohnehin hingehört —
+ *                 Logo, Farben, Typografie und Bildsprache entstehen dort.
+ *   Dokumente     Google Drive ist die Ablage. Notion hält nur den Ordnerlink
+ *                 beim Kunden und beim Projekt.
+ *   Notizen       Freitextfeld plus Seitenkörper, keine eigene Datenbank.
  *
- * Relations werden bewusst NUR auf der Kind-Seite deklariert (Task -> Client).
- * Notion legt die Gegenseite (Client -> Tasks) als dual_property automatisch an.
- * Würde man beide Seiten deklarieren, entstünden doppelte Properties.
+ * Der Aufbau passiert in fünf Durchläufen, weil Notion-Properties voneinander
+ * abhängen:
  *
- * Jede Datenbank hat einen stabilen `key`. Der Key landet im State-File und macht
- * wiederholte Läufe idempotent.
+ *   Pass 1  base          Datenbanken + einfache Properties
+ *   Pass 2  relations     brauchen die data_source_id des Ziels aus Pass 1
+ *   Pass 3  formulas      Formeln auf Basis-Properties
+ *   Pass 4  rollups       lesen die Formeln aus Pass 3 über die Relations
+ *   Pass 5  lateFormulas  Formeln, die ein Rollup oder eine Formel lesen
+ *
+ * Relations werden nur auf der Kind-Seite deklariert (Aufgabe → Kunde).
+ * Notion legt die Gegenseite (Kunde → Aufgaben) automatisch an.
  */
-
-/** Akzentfarbe des Systems. Notion erlaubt nur die eigene Farbpalette. */
-export const ACCENT = "orange";
 
 /* ────────────────────────────────────────────────────────────── Helfer */
 
@@ -32,15 +39,14 @@ export const checkbox = () => ({ checkbox: {} });
 export const url = () => ({ url: {} });
 export const email = () => ({ email: {} });
 export const phone = () => ({ phone_number: {} });
+export const people = () => ({ people: {} });
 export const createdTime = () => ({ created_time: {} });
 export const lastEdited = () => ({ last_edited_time: {} });
-export const files = () => ({ files: {} });
 export const select = (options) => ({ select: { options } });
 export const multi = (options) => ({ multi_select: { options } });
 export const status = (options) => ({ status: { options } });
 export const formula = (expression) => ({ formula: { expression } });
 
-/** Dual-Relation: Notion legt die Gegenseite im Ziel automatisch mit an. */
 export const relation = (targetKey, syncedPropertyName) => ({
   __relationTarget: targetKey,
   relation: {
@@ -60,574 +66,526 @@ export const rollup = (relationPropertyName, rollupPropertyName, fn) => ({
 
 const opt = (name, color = "default") => ({ name, color });
 
-/* ─────────────────────────────────────────────── Gemeinsame Optionslisten */
-
-export const PRIORITY_OPTIONS = [
-  opt("High", "red"),
-  opt("Medium", "orange"),
-  opt("Low", "gray"),
-];
-
-export const TASK_STATUS_OPTIONS = [
-  opt("Inbox", "gray"),
-  opt("To Do", "blue"),
-  opt("In Progress", "orange"),
-  opt("Waiting", "yellow"),
-  opt("Done", "green"),
-];
-
-export const TASK_CATEGORY_OPTIONS = [
-  opt("Client", "blue"),
-  opt("Project", "purple"),
-  opt("Admin", "gray"),
-  opt("Finance", "green"),
-  opt("Marketing", "pink"),
-  opt("Content", "yellow"),
-  opt("Website", "orange"),
-  opt("Sales", "red"),
-  opt("Other", "default"),
-];
-
-export const PROJECT_STATUS_OPTIONS = [
-  opt("Idea", "gray"),
-  opt("Planning", "blue"),
-  opt("Active", "orange"),
-  opt("Waiting", "yellow"),
-  opt("Review", "purple"),
-  opt("Completed", "green"),
-  opt("Cancelled", "red"),
-];
-
-export const CLIENT_STATUS_OPTIONS = [
-  opt("Lead", "gray"),
-  opt("Contacted", "blue"),
-  opt("Proposal", "yellow"),
-  opt("Active", "green"),
-  opt("Inactive", "brown"),
-  opt("Lost", "red"),
-];
-
-export const INVOICE_STATUS_OPTIONS = [
-  opt("Draft", "gray"),
-  opt("Sent", "blue"),
-  opt("Open", "yellow"),
-  opt("Paid", "green"),
-  opt("Overdue", "red"),
-];
-
-export const IDEA_STATUS_OPTIONS = [
-  opt("Inbox", "gray"),
-  opt("Thinking", "blue"),
-  opt("Planned", "yellow"),
-  opt("In Progress", "orange"),
-  opt("Done", "green"),
-  opt("Rejected", "red"),
-];
-
-/* ──────────────────────────────────────────────────── Formel-Ausdrücke
+/* ───────────────────────────────────────────────── Gemeinsame Optionen
  *
- * Notion-Formeln 2.0. `format()` um jeden Select/Status, damit die Formeln
- * auch dann noch stimmen, wenn der Builder auf `select` zurückfallen musste
- * (siehe STATUS_FALLBACK in build-notion.mjs).
+ * Die Status-Namen stehen ohne Emoji. Die farbigen Punkte aus der Vorgabe
+ * (🔵 🟣 🟡 …) sind Farbangaben, keine Symbole — und Notion-Status haben
+ * echte Farben. Die Farbe steht deshalb dort, wo sie hingehört: als
+ * Eigenschaft der Option. Das hält Filter und Formeln lesbar.
  */
 
+export const PRIORITAET = [
+  opt("Hoch", "red"),
+  opt("Mittel", "yellow"),
+  opt("Niedrig", "green"),
+];
+
+/** Der Vertriebstrichter, in der Reihenfolge des tatsächlichen Ablaufs. */
+export const LEAD_STATUS = [
+  opt("Neuer Lead", "blue"),
+  opt("Qualifiziert", "purple"),
+  opt("Erstkontakt", "yellow"),
+  opt("Antwort erhalten", "orange"),
+  opt("Follow-up", "brown"),
+  opt("Angebot", "green"),
+  opt("Verhandlung", "green"),
+  opt("Gewonnen", "green"),
+  opt("Verloren", "red"),
+];
+
+export const KUNDEN_STATUS = [
+  opt("Interessent", "gray"),
+  opt("Aktiver Kunde", "green"),
+  opt("Projekt läuft", "orange"),
+  opt("Wartung", "blue"),
+  opt("Inaktiv", "brown"),
+  opt("Beendet", "red"),
+];
+
+export const PROJEKT_STATUS = [
+  opt("Konzeption", "gray"),
+  opt("Design", "purple"),
+  opt("Entwicklung", "blue"),
+  opt("Kundenfeedback", "yellow"),
+  opt("Änderungen", "orange"),
+  opt("Freigegeben", "green"),
+  opt("Live", "green"),
+  opt("Wartung", "blue"),
+  opt("Pausiert", "brown"),
+  opt("Abgeschlossen", "default"),
+];
+
+export const WEBSITE_STATUS = [
+  opt("Konzept", "gray"),
+  opt("Blueprint", "purple"),
+  opt("Design", "purple"),
+  opt("Entwicklung", "blue"),
+  opt("Feedback", "yellow"),
+  opt("Abnahme", "orange"),
+  opt("Live", "green"),
+  opt("Wartung", "brown"),
+];
+
+export const ANGEBOT_STATUS = [
+  opt("Entwurf", "gray"),
+  opt("Fertig", "blue"),
+  opt("Versendet", "yellow"),
+  opt("Gespräch", "orange"),
+  opt("Angenommen", "green"),
+  opt("Abgelehnt", "red"),
+  opt("Abgelaufen", "brown"),
+];
+
+export const AUFGABEN_STATUS = [
+  opt("Offen", "gray"),
+  opt("In Arbeit", "blue"),
+  opt("Wartet auf Kunde", "yellow"),
+  opt("Erledigt", "green"),
+];
+
+export const BLUEPRINT_STATUS = [
+  opt("Konzept", "gray"),
+  opt("In Arbeit", "blue"),
+  opt("Beim Kunden", "yellow"),
+  opt("Freigegeben", "green"),
+  opt("Überholt", "brown"),
+];
+
+export const BRANCHE = [
+  opt("Handwerk", "orange"),
+  opt("Gastronomie", "red"),
+  opt("Gesundheit", "green"),
+  opt("Beratung", "blue"),
+  opt("Handel", "purple"),
+  opt("Dienstleistung", "gray"),
+  opt("Immobilien", "brown"),
+  opt("Fitness", "yellow"),
+  opt("Kosmetik & Beauty", "pink"),
+  opt("Sonstige", "default"),
+];
+
+/* ────────────────────────────────────────────────────── Formelausdrücke */
+
 const FX = {
-  /** Checkbox: Task erledigt? Basis für den Projektfortschritt. */
-  taskDone: 'format(prop("Status")) == "Done"',
-
-  /** Checkbox: überfällig — Fälligkeit in der Vergangenheit und nicht erledigt. */
-  taskOverdue:
-    'and(not(empty(prop("Due Date"))), format(prop("Status")) != "Done", prop("Due Date") < now())',
-
-  /** Nur die Uhrzeit der Fälligkeit, für "Today's Schedule". Leer wenn ohne Uhrzeit. */
-  taskTime:
-    'if(empty(prop("Due Date")), "", if(formatDate(prop("Due Date"), "HH:mm") == "00:00", "", formatDate(prop("Due Date"), "HH:mm")))',
-
-  /** Rechnungsbeträge nach Status aufgeteilt — Rollups können nicht filtern. */
-  invoicePaidAmount: 'if(format(prop("Status")) == "Paid", prop("Amount"), 0)',
-  invoiceOpenAmount:
-    'if(or(format(prop("Status")) == "Sent", format(prop("Status")) == "Open", format(prop("Status")) == "Overdue"), prop("Amount"), 0)',
-  invoicePaid: 'format(prop("Status")) == "Paid"',
-
-  /**
-   * Projektfortschritt als Punktreihe — spiegelt den Rollup "Progress".
-   * Punkte statt Blockbalken: im Dunkelmodus deutlich ruhiger, und die Reihe
-   * bleibt auch in Board-Karten und auf dem Telefon lesbar.
-   */
-  projectProgressBar:
-    'if(empty(prop("Progress")), "—", ' +
-    'slice("●●●●●●●●●●", 0, round(prop("Progress") * 10)) + ' +
-    'slice("○○○○○○○○○○", 0, 10 - round(prop("Progress") * 10)) + ' +
-    '"  " + format(round(prop("Progress") * 100)) + "%")',
-
-  /** Konstante. Verhindert baulich, dass jemand hier ein Klartext-Passwort einträgt. */
-  passwordNotice: '"🔐 Stored in 1Password"',
-
-  /* ── Countdown ────────────────────────────────────────────────────────
-   * Zwei Schritte statt einer Monsterformel: erst die Zahl, dann der Text.
-   * Die Zahl ist zusätzlich sortier- und filterbar.
-   *
-   * Beide Daten werden über formatDate/parseDate auf den reinen Tag gekürzt.
-   * Ohne das rechnet dateBetween mit Uhrzeiten: "morgen 09:00" wäre von
-   * "heute 14:00" nur 19 Stunden entfernt und damit 0 Tage — also "Heute".
-   */
-  daysLeft: (dateProp) =>
+  /** Countdown, zweistufig: erst die Zahl, dann der Text. */
+  tage: (dateProp) =>
     `if(empty(prop("${dateProp}")), 0, dateBetween(` +
     `parseDate(formatDate(prop("${dateProp}"), "YYYY-MM-DD")), ` +
     `parseDate(formatDate(now(), "YYYY-MM-DD")), "days"))`,
 
-  /** Lesbarer Countdown. `doneStates` sind die Status, bei denen nichts mehr drängt. */
-  countdown: (dateProp, doneStates, doneLabel) => {
-    const tests = doneStates.map((st) => `format(prop("Status")) == "${st}"`);
-    // Notion verlangt bei or() mindestens zwei Argumente — bei nur einem
-    // Status steht die Bedingung deshalb direkt da.
-    const isDone = tests.length === 1 ? tests[0] : `or(${tests.join(", ")})`;
-    return (
-      `if(empty(prop("${dateProp}")), "", ` +
-      `if(${isDone}, "${doneLabel}", ` +
-      `if(prop("Days Left") < 0, "Überfällig · " + format(abs(prop("Days Left"))) + ` +
-      `if(abs(prop("Days Left")) == 1, " Tag", " Tage"), ` +
-      `if(prop("Days Left") == 0, "Heute", ` +
-      `if(prop("Days Left") == 1, "Morgen", ` +
-      `"in " + format(prop("Days Left")) + " Tagen")))))`
-    );
+  /**
+   * Lesbare Frist. `zahlProp` ist die Tage-Formel, `fertig` die Status,
+   * bei denen nichts mehr drängt. `statusProp` weicht ab, wo die Status-Property
+   * anders heißt — bei Hosting & Domains etwa "Domainstatus".
+   *
+   * Beide Daten werden über formatDate/parseDate auf den reinen Tag gekürzt.
+   * Sonst rechnet dateBetween mit Uhrzeiten: "morgen 09:00" wäre von
+   * "heute 14:00" nur 19 Stunden entfernt und damit 0 Tage — also "Heute".
+   */
+  frist: (dateProp, zahlProp, fertig, fertigText, statusProp = "Status") => {
+    const tests = fertig.map((st) => `format(prop("${statusProp}")) == "${st}"`);
+    // Notion verlangt bei or() mindestens zwei Argumente.
+    const istFertig = tests.length === 0 ? null
+      : tests.length === 1 ? tests[0]
+      : `or(${tests.join(", ")})`;
+
+    const kern =
+      `if(prop("${zahlProp}") < 0, "Überfällig · " + format(abs(prop("${zahlProp}"))) + ` +
+      `if(abs(prop("${zahlProp}")) == 1, " Tag", " Tage"), ` +
+      `if(prop("${zahlProp}") == 0, "Heute", ` +
+      `if(prop("${zahlProp}") == 1, "Morgen", ` +
+      `"in " + format(prop("${zahlProp}")) + " Tagen")))`;
+
+    return istFertig
+      ? `if(empty(prop("${dateProp}")), "", if(${istFertig}, "${fertigText}", ${kern}))`
+      : `if(empty(prop("${dateProp}")), "", ${kern})`;
   },
 
-  /** Client: nächster Kontakt fällig? */
-  clientFollowUpDue:
-    'and(not(empty(prop("Next Contact"))), prop("Next Contact") <= now())',
+  aufgabeErledigt: 'format(prop("Status")) == "Erledigt"',
+  aufgabeUeberfaellig:
+    'and(not(empty(prop("Deadline"))), format(prop("Status")) != "Erledigt", prop("Deadline") < now())',
+  aufgabeUhrzeit:
+    'if(empty(prop("Deadline")), "", if(formatDate(prop("Deadline"), "HH:mm") == "00:00", "", formatDate(prop("Deadline"), "HH:mm")))',
+
+  /** Angebotssumme. Leere Posten zählen als 0. */
+  angebotSumme:
+    'sum(prop("Websitepreis"), prop("Markenpaket"), prop("Domain"), prop("Weitere Leistungen"))',
+
+  /** Fortschritt als Punktreihe — ruhiger im Dunkelmodus als ein Blockbalken. */
+  fortschritt:
+    'if(empty(prop("Fortschritt")), "—", ' +
+    'slice("●●●●●●●●●●", 0, round(prop("Fortschritt") * 10)) + ' +
+    'slice("○○○○○○○○○○", 0, 10 - round(prop("Fortschritt") * 10)) + ' +
+    '"  " + format(round(prop("Fortschritt") * 100)) + "%")',
+
+  /** Was Novera an einem Hosting monatlich verdient. */
+  hostingMarge:
+    'if(or(empty(prop("Monatlicher Kundenpreis")), empty(prop("Monatliche Kosten"))), 0, ' +
+    'prop("Monatlicher Kundenpreis") - prop("Monatliche Kosten"))',
+
+  /** Konstante. Verhindert baulich, dass hier ein Klartext-Passwort landet. */
+  passwortHinweis: '"🔐 In 1Password"',
+
+  /** Follow-up fällig? */
+  followUpFaellig:
+    'and(not(empty(prop("Nächstes Follow-up"))), prop("Nächstes Follow-up") <= now())',
 };
 
 /* ────────────────────────────────────────────────────────── Datenbanken */
 
 export const DATABASES = [
-  /* ═══════════════════════════════════════════════════════════ CLIENTS */
+  /* ═════════════════════════════════════════════════════════════ LEADS */
   {
-    key: "clients",
-    name: "Clients",
-    icon: "👥",
-    description: "CRM — jeder Kunde mit vollständiger digitaler Kundenakte.",
+    key: "leads",
+    name: "Leads",
+    icon: "🎯",
+    description: "Der Vertriebstrichter — vom gefundenen Unternehmen bis zum gewonnenen Kunden.",
     base: {
-      "Client Name": title(),
-      Company: text(),
-      "Contact Person": text(),
-      Email: email(),
-      Phone: phone(),
-      Status: status(CLIENT_STATUS_OPTIONS),
-      "Client Since": date(),
-      "Last Contact": date(),
-      "Next Contact": date(),
+      Unternehmen: title(),
+      Ansprechpartner: text(),
+      "E-Mail": email(),
+      Telefon: phone(),
       Website: url(),
-      "Google Drive": url(),
-      Contract: url(),
-      "1Password Vault": text(),
-      Notes: text(),
+      Instagram: url(),
+      Facebook: url(),
+      "Google-Unternehmensprofil": url(),
+      Branche: select(BRANCHE),
+      Standort: text(),
+      "Lead Score": number(),
+      Priorität: select(PRIORITAET),
+      Status: status(LEAD_STATUS),
+      Quelle: select([
+        opt("Google Maps", "blue"),
+        opt("Instagram", "pink"),
+        opt("Empfehlung", "green"),
+        opt("Website-Anfrage", "purple"),
+        opt("Kaltakquise", "orange"),
+        opt("Netzwerk", "brown"),
+        opt("Sonstige", "gray"),
+      ]),
+      "Sales Angle": text(),
+      "Letzter Kontakt": date(),
+      "Nächstes Follow-up": date(),
+      Notizen: text(),
     },
-    // Keine eigenen Relations: Projects, Tasks, Invoices, Access, Client Notes,
-    // Communication und Website Requirements entstehen automatisch als Gegenseite.
     relations: {},
     formulas: {
-      "Follow Up Due": formula(FX.clientFollowUpDue),
-    },
-    rollups: {
-      Revenue: rollup("Invoices", "Amount Paid", "sum"),
-      "Open Invoices": rollup("Invoices", "Amount Open", "sum"),
-      "Project Count": rollup("Projects", "Project Name", "count"),
-      "Open Tasks": rollup("Tasks", "Done?", "unchecked"),
-      "Access Entries": rollup("Access", "Service", "count"),
+      "Follow-up fällig": formula(FX.followUpFaellig),
     },
   },
 
-  /* ══════════════════════════════════════════════════════════ PROJECTS */
+  /* ════════════════════════════════════════════════════════════ KUNDEN */
   {
-    key: "projects",
-    name: "Projects",
-    icon: "🚀",
-    description: "Alle Projekte von Novera Studio, verknüpft mit Kunde, Tasks und Umsatz.",
+    key: "kunden",
+    name: "Kunden",
+    icon: "👥",
+    description: "Die zentrale Kundenakte. Von hier aus ist alles zum Kunden erreichbar.",
     base: {
-      "Project Name": title(),
-      Status: status(PROJECT_STATUS_OPTIONS),
-      Priority: select(PRIORITY_OPTIONS),
-      "Start Date": date(),
-      Deadline: date(),
+      Firmenname: title(),
+      Ansprechpartner: text(),
+      "E-Mail": email(),
+      Telefon: phone(),
+      Adresse: text(),
+      Website: url(),
+      Instagram: url(),
+      Branche: select(BRANCHE),
+      Standort: text(),
+      "Kunde seit": date(),
+      Status: status(KUNDEN_STATUS),
+      "Novera Care": checkbox(),
+      "Novera Care · Monatlich": euro(),
       "Google Drive": url(),
-      "Live URL": url(),
-      Notes: text(),
-      Files: files(),
+      Papierkram: url(),
+      "1Password Vault": text(),
+      Notizen: text(),
     },
     relations: {
-      Client: relation("clients", "Projects"),
+      Lead: relation("leads", "Kunde"),
     },
     rollups: {
-      Progress: rollup("Tasks", "Done?", "percent_checked"),
-      "Tasks Total": rollup("Tasks", "Task Name", "count"),
-      "Open Tasks": rollup("Tasks", "Done?", "unchecked"),
-      Revenue: rollup("Invoices", "Amount Paid", "sum"),
-      "Open Amount": rollup("Invoices", "Amount Open", "sum"),
+      "Offene Aufgaben": rollup("Aufgaben", "Erledigt?", "unchecked"),
+      "Angebotswert": rollup("Angebote", "Gesamtpreis", "sum"),
+    },
+  },
+
+  /* ══════════════════════════════════════════════════════════ PROJEKTE */
+  {
+    key: "projekte",
+    name: "Projekte",
+    icon: "🚀",
+    description: "Jeder Auftrag als Projekt — mit Kunde, Deadline, Preis und Fortschritt.",
+    base: {
+      Projektname: title(),
+      Projekttyp: select([
+        opt("Website", "blue"),
+        opt("Relaunch", "purple"),
+        opt("Landingpage", "green"),
+        opt("Markenpaket", "pink"),
+        opt("Wartung", "brown"),
+        opt("Sonstiges", "gray"),
+      ]),
+      Status: status(PROJEKT_STATUS),
+      Startdatum: date(),
+      Deadline: date(),
+      Preis: euro(),
+      "Live-URL": url(),
+      "Google Drive": url(),
+      Notizen: text(),
+    },
+    relations: {
+      Kunde: relation("kunden", "Projekte"),
     },
     formulas: {
-      "Days Left": formula(FX.daysLeft("Deadline")),
+      "Tage bis Deadline": formula(FX.tage("Deadline")),
     },
-    // Lesen das Rollup "Progress" bzw. die Formel "Days Left".
+    rollups: {
+      Fortschritt: rollup("Aufgaben", "Erledigt?", "percent_checked"),
+      "Offene Aufgaben": rollup("Aufgaben", "Erledigt?", "unchecked"),
+    },
     lateFormulas: {
-      "Progress Bar": formula(FX.projectProgressBar),
-      Countdown: formula(
-        FX.countdown("Deadline", ["Completed", "Cancelled"], "Abgeschlossen")
+      Frist: formula(
+        FX.frist("Deadline", "Tage bis Deadline", ["Live", "Abgeschlossen", "Pausiert"], "—")
+      ),
+      Fortschrittsbalken: formula(FX.fortschritt),
+    },
+  },
+
+  /* ══════════════════════════════════════════════════════════ WEBSITES */
+  {
+    key: "websites",
+    name: "Websites",
+    icon: "🌐",
+    description: "Die technische Sicht auf jede Website — Status, Domain, Mockups, Launch.",
+    base: {
+      Website: title(),
+      Status: status(WEBSITE_STATUS),
+      Domain: text(),
+      "Live-URL": url(),
+      "Preview-URL": url(),
+      "Desktop Mockup": url(),
+      "Mobile Mockup": url(),
+      "SEO erledigt": checkbox(),
+      Launchdatum: date(),
+      "Letzte Aktualisierung": lastEdited(),
+    },
+    relations: {
+      Kunde: relation("kunden", "Websites"),
+      Projekt: relation("projekte", "Websites"),
+    },
+    rollups: {
+      // Keine doppelte Pflege: Novera Care steht beim Kunden und wird hier
+      // nur gespiegelt. show_original zeigt den Haken selbst statt einer Zahl.
+      "Novera Care": rollup("Kunde", "Novera Care", "show_original"),
+    },
+  },
+
+  /* ═════════════════════════════════════════════════════════ BLUEPRINTS */
+  {
+    key: "blueprints",
+    name: "Website Blueprints",
+    icon: "🧠",
+    description:
+      "Der Bauplan je Website: Seitenstruktur, Design, Komponenten, SEO, Mockups, Freigabe. Inhalt steht im Seitenkörper.",
+    base: {
+      Blueprint: title(),
+      Version: select([
+        opt("v1 · Konzept", "gray"),
+        opt("v2 · Kundenänderungen", "yellow"),
+        opt("v3 · final", "green"),
+        opt("v4", "green"),
+        opt("v5", "green"),
+      ]),
+      Status: status(BLUEPRINT_STATUS),
+      Kundenfreigabe: checkbox(),
+      Freigabedatum: date(),
+      "Desktop Mockup": url(),
+      "Mobile Mockup": url(),
+      "Google Drive": url(),
+      Notizen: text(),
+    },
+    relations: {
+      Website: relation("websites", "Blueprint"),
+    },
+  },
+
+  /* ══════════════════════════════════════════════════════════ ANGEBOTE */
+  {
+    key: "angebote",
+    name: "Angebote",
+    icon: "📄",
+    description: "Angebote mit Einzelposten. Die Rechnung selbst entsteht später in Papierkram.",
+    base: {
+      Angebotsname: title(),
+      Websitepreis: euro(),
+      Markenpaket: euro(),
+      "Novera Care · Monatlich": euro(),
+      Domain: euro(),
+      "Weitere Leistungen": euro(),
+      "PDF / Google Drive": url(),
+      "Erstellt am": date(),
+      "Versendet am": date(),
+      "Gültig bis": date(),
+      Status: status(ANGEBOT_STATUS),
+      Notizen: text(),
+    },
+    relations: {
+      Kunde: relation("kunden", "Angebote"),
+      Projekt: relation("projekte", "Angebote"),
+    },
+    formulas: {
+      // Einmalige Posten. Novera Care läuft monatlich und zählt nicht hinein.
+      Gesamtpreis: formula(FX.angebotSumme),
+      "Tage bis Ablauf": formula(FX.tage("Gültig bis")),
+    },
+    lateFormulas: {
+      Gültigkeit: formula(
+        FX.frist("Gültig bis", "Tage bis Ablauf", ["Angenommen", "Abgelehnt", "Entwurf"], "—")
       ),
     },
   },
 
-  /* ═════════════════════════════════════════════════════════════ TASKS */
+  /* ══════════════════════════════════════════════════════════ AUFGABEN */
   {
-    key: "tasks",
-    name: "Tasks",
-    icon: "📋",
+    key: "aufgaben",
+    name: "Aufgaben",
+    icon: "✅",
     description:
-      "Zentrale Aufgabendatenbank. Eine Aufgabe wird genau einmal angelegt und erscheint über Relations überall dort, wo sie hingehört.",
+      "Alles, was zu tun ist. Eine Aufgabe wird einmal angelegt und erscheint über Relations beim Kunden und beim Projekt.",
     base: {
-      "Task Name": title(),
-      Status: status(TASK_STATUS_OPTIONS),
-      Priority: select(PRIORITY_OPTIONS),
-      // Datum MIT Uhrzeit — deshalb kein zweites Feld "Time" zum Pflegen.
-      "Due Date": date(),
-      Category: select(TASK_CATEGORY_OPTIONS),
-      Notes: text(),
-      "Completed Date": date(),
-      "Created Date": createdTime(),
+      Aufgabe: title(),
+      Kategorie: select([
+        opt("Sales", "red"),
+        opt("Kunde", "blue"),
+        opt("Design", "purple"),
+        opt("Entwicklung", "orange"),
+        opt("SEO", "green"),
+        opt("Technik", "brown"),
+        opt("Admin", "gray"),
+        opt("Sonstiges", "default"),
+      ]),
+      Priorität: select(PRIORITAET),
+      Status: status(AUFGABEN_STATUS),
+      // Datum MIT Uhrzeit — deshalb kein zweites Feld für die Zeit.
+      Deadline: date(),
+      Zuständig: people(),
+      Wiederkehrend: select([
+        opt("Einmalig", "gray"),
+        opt("Wöchentlich", "blue"),
+        opt("Monatlich", "purple"),
+        opt("Jährlich", "brown"),
+      ]),
+      Notiz: text(),
+      Erstellt: createdTime(),
     },
     relations: {
-      Client: relation("clients", "Tasks"),
-      Project: relation("projects", "Tasks"),
+      Kunde: relation("kunden", "Aufgaben"),
+      Projekt: relation("projekte", "Aufgaben"),
     },
     formulas: {
-      "Done?": formula(FX.taskDone),
-      "Overdue?": formula(FX.taskOverdue),
-      Time: formula(FX.taskTime),
-      "Days Left": formula(FX.daysLeft("Due Date")),
+      "Erledigt?": formula(FX.aufgabeErledigt),
+      "Überfällig?": formula(FX.aufgabeUeberfaellig),
+      Uhrzeit: formula(FX.aufgabeUhrzeit),
+      "Tage bis Deadline": formula(FX.tage("Deadline")),
     },
-    // Liest "Days Left" — deshalb einen Durchlauf später.
     lateFormulas: {
-      Deadline: formula(FX.countdown("Due Date", ["Done"], "Erledigt")),
+      Frist: formula(FX.frist("Deadline", "Tage bis Deadline", ["Erledigt"], "Erledigt")),
     },
   },
 
-  /* ══════════════════════════════════════════════════════════ INVOICES */
+  /* ═══════════════════════════════════════════════ HOSTING & DOMAINS */
   {
-    key: "invoices",
-    name: "Invoices",
-    icon: "🧾",
+    key: "hosting",
+    name: "Hosting & Domains",
+    icon: "☁️",
     description:
-      "Übersicht der Rechnungen. Erstellt und verbucht wird weiterhin in Papierkram — hier steht nur der Status.",
+      "Was wo läuft und wann es verlängert werden muss. Domainverlängerungen fallen hier auf, bevor sie ablaufen.",
     base: {
-      "Invoice Number": title(),
-      Amount: euro(),
-      Date: date(),
-      "Due Date": date(),
-      Status: status(INVOICE_STATUS_OPTIONS),
-      "Paperkram Link": url(),
-      Notes: text(),
+      Eintrag: title(),
+      Hostinganbieter: select([
+        opt("Hostinger", "purple"),
+        opt("IONOS", "blue"),
+        opt("All-Inkl", "green"),
+        opt("Netlify", "gray"),
+        opt("Vercel", "default"),
+        opt("Sonstiger", "brown"),
+      ]),
+      Tarif: text(),
+      "Monatliche Kosten": euro(),
+      Domain: text(),
+      Registrar: select([
+        opt("Hostinger", "purple"),
+        opt("IONOS", "blue"),
+        opt("United Domains", "green"),
+        opt("Namecheap", "orange"),
+        opt("Sonstiger", "brown"),
+      ]),
+      Domainstatus: status([
+        opt("Aktiv", "green"),
+        opt("Verlängerung fällig", "orange"),
+        opt("Übertragung läuft", "yellow"),
+        opt("Gekündigt", "red"),
+      ]),
+      Ablaufdatum: date(),
+      SSL: checkbox(),
+      Backup: checkbox(),
+      "Monatlicher Kundenpreis": euro(),
+      Notiz: text(),
     },
     relations: {
-      Client: relation("clients", "Invoices"),
-      Project: relation("projects", "Invoices"),
+      Kunde: relation("kunden", "Hosting & Domains"),
+      Website: relation("websites", "Hosting"),
     },
     formulas: {
-      "Amount Paid": formula(FX.invoicePaidAmount),
-      "Amount Open": formula(FX.invoiceOpenAmount),
-      "Paid?": formula(FX.invoicePaid),
-      "Days Left": formula(FX.daysLeft("Due Date")),
+      "Tage bis Ablauf": formula(FX.tage("Ablaufdatum")),
+      Marge: formula(FX.hostingMarge),
     },
     lateFormulas: {
-      Countdown: formula(FX.countdown("Due Date", ["Paid", "Draft"], "Bezahlt")),
+      Ablauf: formula(
+        FX.frist("Ablaufdatum", "Tage bis Ablauf", ["Gekündigt"], "—", "Domainstatus")
+      ),
     },
   },
 
-  /* ══════════════════════════════════════════════════════════ EXPENSES */
+  /* ══════════════════════════════════════════════════════════ ZUGÄNGE */
   {
-    key: "expenses",
-    name: "Expenses",
-    icon: "💳",
-    description:
-      "Ausgabenübersicht. Belege und Steuerrelevantes bleiben in Papierkram.",
-    base: {
-      Expense: title(),
-      Provider: text(),
-      Category: select([
-        opt("Software", "blue"),
-        opt("Hosting", "purple"),
-        opt("Hardware", "gray"),
-        opt("Marketing", "pink"),
-        opt("Subcontractor", "orange"),
-        opt("Office", "brown"),
-        opt("Travel", "yellow"),
-        opt("Fees", "red"),
-        opt("Other", "default"),
-      ]),
-      Amount: euro(),
-      Date: date(),
-      Recurring: select([
-        opt("One-time", "gray"),
-        opt("Monthly", "blue"),
-        opt("Yearly", "purple"),
-      ]),
-      Receipt: url(),
-      "Paperkram Link": url(),
-      Notes: text(),
-    },
-    relations: {
-      Project: relation("projects", "Expenses"),
-    },
-  },
-
-  /* ════════════════════════════════════════════════════════════ ACCESS */
-  {
-    key: "access",
-    name: "Client Access",
+    key: "zugaenge",
+    name: "Zugänge",
     icon: "🔐",
     description:
-      "Dokumentiert WELCHE Zugänge existieren. Passwörter stehen ausschließlich in 1Password, niemals hier.",
+      "Dokumentiert, WELCHE Zugänge existieren. Die Passwörter liegen ausschließlich in 1Password.",
     base: {
-      "Access Entry": title(),
+      Eintrag: title(),
       Service: select([
         opt("Hostinger", "purple"),
         opt("Domain", "blue"),
         opt("WordPress", "gray"),
-        opt("Hosting", "purple"),
         opt("Google Business", "green"),
         opt("Google Analytics", "orange"),
         opt("Search Console", "orange"),
         opt("Meta Business", "blue"),
         opt("Instagram", "pink"),
         opt("Facebook", "blue"),
-        opt("E-Mail", "yellow"),
-        opt("Social Media", "pink"),
-        opt("Other", "default"),
+        opt("E-Mail-Postfach", "yellow"),
+        opt("Sonstiger", "default"),
       ]),
-      "Username / Email": text(),
-      "Login URL": url(),
-      "Account Owner": select([
-        opt("Novera Studio", "orange"),
-        opt("Client", "blue"),
-        opt("Shared", "gray"),
+      "Benutzername / E-Mail": text(),
+      "1Password-Eintrag": text(),
+      URL: url(),
+      Zweck: text(),
+      Status: select([
+        opt("Aktiv", "green"),
+        opt("Inaktiv", "gray"),
       ]),
-      "2FA Enabled": checkbox(),
-      "Recovery Email": email(),
-      "Password Manager Reference": text(),
-      Notes: text(),
+      "2FA aktiv": checkbox(),
+      Notiz: text(),
     },
     relations: {
-      Client: relation("clients", "Access"),
+      Kunde: relation("kunden", "Zugänge"),
     },
     formulas: {
-      // Konstante Formel — dieses Feld lässt sich nicht mit Klartext überschreiben.
-      Password: formula(FX.passwordNotice),
+      // Feste Formel: lässt sich nicht mit einem Klartext-Passwort überschreiben.
+      Passwort: formula(FX.passwortHinweis),
     },
-  },
-
-  /* ══════════════════════════════════════════ WEBSITE REQUIREMENTS */
-  {
-    key: "requirements",
-    name: "Website Requirements",
-    icon: "🌐",
-    description:
-      "Strukturierte Anforderungsaufnahme pro Kunde/Projekt: was die Website können soll — und was ausdrücklich nicht.",
-    base: {
-      "Requirement Set": title(),
-      Status: status([
-        opt("Open Questions", "yellow"),
-        opt("In Clarification", "orange"),
-        opt("Confirmed", "green"),
-        opt("Built", "blue"),
-      ]),
-      "Pages Wanted": multi([
-        opt("Home", "blue"),
-        opt("Services", "purple"),
-        opt("About", "green"),
-        opt("Contact", "orange"),
-        opt("Portfolio", "pink"),
-        opt("Blog", "yellow"),
-        opt("Shop", "red"),
-        opt("Team", "brown"),
-        opt("FAQ", "gray"),
-        opt("Legal / Impressum", "default"),
-      ]),
-      Style: multi([
-        opt("Modern", "blue"),
-        opt("Dark", "gray"),
-        opt("Light", "default"),
-        opt("Minimal", "brown"),
-        opt("Bold", "red"),
-        opt("Elegant", "purple"),
-        opt("Playful", "pink"),
-      ]),
-      Features: multi([
-        opt("Contact Form", "blue"),
-        opt("WhatsApp Button", "green"),
-        opt("Google Maps", "orange"),
-        opt("Newsletter", "yellow"),
-        opt("Booking / Termin", "purple"),
-        opt("Social Media Links", "pink"),
-        opt("Blog", "brown"),
-        opt("Shop", "red"),
-        opt("Multilingual", "gray"),
-        opt("Live Chat", "default"),
-      ]),
-      Colors: text(),
-      Logo: select([
-        opt("Provided", "green"),
-        opt("Needs Design", "orange"),
-        opt("Needs Refresh", "yellow"),
-        opt("None", "gray"),
-      ]),
-      Branding: text(),
-      "Texts By": select([
-        opt("Client", "blue"),
-        opt("Novera Studio", "orange"),
-        opt("AI-assisted", "purple"),
-      ]),
-      "Images By": select([
-        opt("Client", "blue"),
-        opt("Novera Studio", "orange"),
-        opt("Stock", "gray"),
-        opt("Photographer", "purple"),
-      ]),
-      "SEO Wishes": text(),
-      "Mobile Requirements": text(),
-      "Reference Websites": text(),
-      "NOT Wanted": text(),
-      "Special Requests": text(),
-      Deadline: date(),
-    },
-    relations: {
-      Client: relation("clients", "Website Requirements"),
-      Project: relation("projects", "Website Requirements"),
-    },
-  },
-
-  /* ═══════════════════════════════════════════════════ COMMUNICATION */
-  {
-    key: "communication",
-    name: "Client Communication",
-    icon: "💬",
-    description:
-      "Gesprächsprotokoll pro Kunde — damit später nachvollziehbar ist, was wann besprochen wurde.",
-    base: {
-      Entry: title(),
-      Date: date(),
-      Channel: select([
-        opt("Call", "blue"),
-        opt("E-Mail", "yellow"),
-        opt("Meeting", "purple"),
-        opt("WhatsApp", "green"),
-        opt("On Site", "orange"),
-        opt("Other", "gray"),
-      ]),
-      Summary: text(),
-      "Follow Up": checkbox(),
-      "Follow Up Date": date(),
-    },
-    relations: {
-      Client: relation("clients", "Communication"),
-      Project: relation("projects", "Client Communication"),
-    },
-  },
-
-  /* ═════════════════════════════════════════════════════════════ IDEAS */
-  {
-    key: "ideas",
-    name: "Ideas",
-    icon: "💡",
-    description: "Ideenspeicher für Novera Studio.",
-    base: {
-      Idea: title(),
-      Category: select([
-        opt("Business", "orange"),
-        opt("Service", "blue"),
-        opt("Product", "purple"),
-        opt("Marketing", "pink"),
-        opt("Website", "green"),
-        opt("Social Media", "red"),
-        opt("Content", "yellow"),
-        opt("Automation", "brown"),
-        opt("Other", "gray"),
-      ]),
-      Status: status(IDEA_STATUS_OPTIONS),
-      Priority: select(PRIORITY_OPTIONS),
-      Notes: text(),
-      "Created Date": createdTime(),
-    },
-    relations: {
-      Project: relation("projects", "Ideas"),
-    },
-  },
-
-  /* ═════════════════════════════════════════════════════════════ NOTES */
-  {
-    key: "notes",
-    name: "Notes",
-    icon: "📝",
-    description:
-      "Schnelle Notizen. Lassen sich nachträglich einem Kunden, Projekt oder Task zuordnen.",
-    base: {
-      Note: title(),
-      Type: select([
-        opt("Quick Note", "gray"),
-        opt("Meeting", "purple"),
-        opt("Decision", "green"),
-        opt("Research", "blue"),
-        opt("Follow Up", "orange"),
-      ]),
-      Date: date(),
-      "Created Date": createdTime(),
-      Content: text(),
-    },
-    relations: {
-      Client: relation("clients", "Client Notes"),
-      Project: relation("projects", "Project Notes"),
-      Task: relation("tasks", "Related Notes"),
-    },
-  },
-
-  /* ═════════════════════════════════════════════════════════ KNOWLEDGE */
-  {
-    key: "knowledge",
-    name: "Knowledge",
-    icon: "🧠",
-    description:
-      "SOPs, Prozesse und Vorlagen von Novera Studio. Der eigentliche Inhalt steht im Seitenkörper.",
-    base: {
-      Title: title(),
-      Category: select([
-        opt("SOP", "orange"),
-        opt("Process", "blue"),
-        opt("Template", "purple"),
-        opt("Guide", "green"),
-        opt("Sales", "red"),
-        opt("Marketing", "pink"),
-        opt("Client Process", "yellow"),
-        opt("Website Process", "brown"),
-        opt("Automation", "gray"),
-        opt("Useful Link", "default"),
-      ]),
-      Status: status([
-        opt("Draft", "gray"),
-        opt("Active", "green"),
-        opt("Needs Review", "yellow"),
-        opt("Archived", "brown"),
-      ]),
-      Tags: multi([
-        opt("Onboarding", "blue"),
-        opt("Offboarding", "brown"),
-        opt("Design", "purple"),
-        opt("Development", "orange"),
-        opt("Finance", "green"),
-        opt("Legal", "gray"),
-        opt("Tools", "yellow"),
-      ]),
-      Link: url(),
-      "Last Updated": lastEdited(),
-    },
-    relations: {},
   },
 ];
 

@@ -1,11 +1,13 @@
 /**
- * Seitenaufbau: HQ-Dashboard, Bereichsseiten, Kundenakte, Projektseite.
+ * Seitenaufbau: Dashboard, Kundenakte, Projekt- und Blueprint-Vorlagen,
+ * Werkzeugseiten.
  *
- * Wichtig für das Verständnis der `manualSlot`-Blöcke:
- * Die Notion-API kann KEINE verknüpften Datenbankansichten ("Linked View") in eine
- * Seite einfügen — es gibt schlicht keinen Blocktyp dafür. Überall dort, wo eine
- * gefilterte Live-Liste hingehört, steht deshalb ein orange markierter Platzhalter
- * mit der exakten Klickanweisung. Siehe docs/MANUELL-EINZURICHTEN.md.
+ * Zu den orange markierten Platzhaltern: Die Notion-API kann keine verknüpfte
+ * Datenbankansicht in eine Seite einfügen — es gibt schlicht keinen Blocktyp
+ * dafür. Überall dort, wo eine gefilterte Live-Liste hingehört, steht deshalb
+ * ein Hinweis mit der exakten Klickanweisung. Die Ansichten selbst sind in den
+ * Datenbanken bereits fertig angelegt; es muss nur noch gezeigt werden, wo sie
+ * erscheinen sollen. Siehe docs/MANUELL-EINZURICHTEN.md.
  */
 
 import {
@@ -14,198 +16,138 @@ import {
 } from "./blocks.mjs";
 import { rtParts } from "./notion.mjs";
 
-/* ─────────────────────────────────────────────────── Google Workspace */
+const compact = (arr) => arr.filter(Boolean);
 
-export const GOOGLE_LINKS = [
-  ["Gmail", "https://mail.google.com", "📧"],
-  ["Google Calendar", "https://calendar.google.com", "📅"],
-  ["Google Drive", "https://drive.google.com", "📁"],
-  ["Google Docs", "https://docs.google.com", "📝"],
-  ["Google Sheets", "https://sheets.google.com", "📊"],
-  ["Google Slides", "https://slides.google.com", "📽️"],
-  ["Google Meet", "https://meet.google.com", "🎥"],
-  ["Google Chat", "https://chat.google.com", "💬"],
-  ["Workspace Admin", "https://admin.google.com", "⚙️"],
+/* ────────────────────────────────────────────────────────── Werkzeuge */
+
+export const NOVERA_TOOLS = [
+  ["Gmail", "https://mail.google.com", "📧", "Kundenkommunikation"],
+  ["Google Drive", "https://drive.google.com", "📁", "Dateiablage — der eigentliche Speicher"],
+  ["Google Calendar", "https://calendar.google.com", "📅", "Termine"],
+  ["Google Docs", "https://docs.google.com", "📝", "Angebote, Briefings"],
+  ["Google Sheets", "https://sheets.google.com", "📊", "Listen, Kalkulationen"],
+  ["Claude", "https://claude.ai", "🤖", "Texte, Struktur, Entwicklung"],
+  ["Hostinger", "https://hpanel.hostinger.com", "☁️", "Hosting und Domains"],
+  ["1Password", "https://my.1password.com", "🔐", "Alle Passwörter"],
+  ["Papierkram", "https://www.papierkram.de", "🧾", "Buchhaltung und Rechnungen"],
 ];
 
-export const BUSINESS_TOOLS = [
-  ["Papierkram", "https://www.papierkram.de", "🧾", "Buchhaltung, Rechnungen, Belege"],
-  ["1Password", "https://my.1password.com", "🔐", "Passwörter, Passkeys, Recovery Codes"],
-  ["Claude", "https://claude.ai", "🤖", "Systemaufbau, Dokumente, Struktur"],
-  ["ChatGPT", "https://chat.openai.com", "🧠", "Strategie, Recherche, Analyse"],
-];
-
-/* ══════════════════════════════════════════════════════ HQ DASHBOARD */
+/* ═══════════════════════════════════════════════════════════ DASHBOARD */
 
 export function hqBlocks({ db, pages, urls }) {
   const dbLink = (key) => (db[key] ? linkToDatabase(db[key].databaseId) : null);
   const pgLink = (key) => (pages[key] ? linkToPage(pages[key]) : null);
 
-  const quickAction = (label, key) =>
+  const schnellzugriff = (label, key) =>
     db[key]
       ? callout(rtParts([[label, { bold: true }]]), "＋", "gray_background", [
           linkToDatabase(db[key].databaseId),
         ])
       : callout(rtParts([[label, { bold: true }]]), "＋", "gray_background");
 
-  const kpi = (label, hint) =>
-    callout(
-      rtParts([
-        [label.toUpperCase() + "\n", { bold: true }],
-        [hint, { color: "gray" }],
-      ]),
-      "▪",
-      "gray_background"
-    );
-
   return compact([
-    /* ── HEADER ─────────────────────────────────────────────────────────
-     * Liegt das Widget vor, trägt es Logo, Wortmarke und Untertitel bereits.
-     * Eine zusätzliche Überschrift wäre dann dieselbe Aussage zweimal.
-     */
+    /* ── KOPF ───────────────────────────────────────────────────────── */
     ...(urls.clock
-      ? [embed(urls.clock, "Novera Studio · Wochentag, Datum und Uhrzeit — läuft live")]
+      ? [embed(urls.clock, "Novera Studio · Wochentag, Datum und Uhrzeit")]
       : [
           h1("NOVERA STUDIO"),
           parts([["Business Command Center", { color: "gray" }]]),
           manualSlot(
-            "Live-Uhr und Logo fehlen noch",
-            "Widget veröffentlichen, NOVERA_CLOCK_URL setzen und den Builder erneut " +
-              "laufen lassen. Dann steht hier der Novera-Header mit laufender Uhr. " +
+            "Kopfleiste fehlt noch",
+            "Widget veröffentlichen, NOVERA_CLOCK_URL in .env setzen und neu bauen. " +
               "Siehe docs/BRANDING.md."
           ),
         ]),
 
-    divider(),
-
-    /* ── QUICK ACTIONS ──────────────────────────────────────────────── */
-    section("Quick Actions"),
-    parts([
-      ["Klick öffnet die Datenbank — dort mit ", { color: "gray" }],
-      ["New", { code: true }],
-      [" den Eintrag anlegen.", { color: "gray" }],
-    ]),
+    /* ── SCHNELLZUGRIFF ─────────────────────────────────────────────── */
     columns([
-      [quickAction("New Task", "tasks")],
-      [quickAction("New Project", "projects")],
-      [quickAction("New Client", "clients")],
-      [quickAction("New Invoice", "invoices")],
-    ]),
-    columns([
-      [quickAction("New Expense", "expenses")],
-      [quickAction("New Idea", "ideas")],
-      [quickAction("New Note", "notes")],
-      [quickAction("New Access Entry", "access")],
+      [schnellzugriff("Neuer Lead", "leads")],
+      [schnellzugriff("Neue Aufgabe", "aufgaben")],
+      [schnellzugriff("Neues Angebot", "angebote")],
+      [schnellzugriff("Neuer Kunde", "kunden")],
     ]),
 
     divider(),
 
-    /* ── TODAY ──────────────────────────────────────────────────────── */
-    section("Today"),
-    columns([
-      [
-        h3("🔴 High Priority"),
-        manualSlot(
-          "Linked View: Tasks → High Priority",
-          "/Linked view of database → Tasks → Ansicht „High Priority“ wählen."
-        ),
-      ],
-      [
-        h3("⏰ Today's Schedule"),
-        manualSlot(
-          "Linked View: Tasks → Today",
-          "/Linked view of database → Tasks → Ansicht „Today“ wählen. " +
-            "Sortiert nach Due Date, die Spalte „Time“ zeigt die Uhrzeit."
-        ),
-      ],
-    ]),
-
-    h3("🚨 Overdue"),
+    /* ── HEUTE ──────────────────────────────────────────────────────── */
+    section("Heute"),
     manualSlot(
-      "Linked View: Tasks → Overdue",
-      "/Linked view of database → Tasks → Ansicht „Overdue“ wählen. Sollte im Alltag leer sein."
+      "Verknüpfte Ansicht: Aufgaben → Überfällig",
+      "/verknüpfte → Aufgaben → Ansicht „Überfällig“. Steht bewusst oben: " +
+        "was überfällig ist, gehört zuerst gesehen."
     ),
-
-    h3("🎯 Next"),
     manualSlot(
-      "Linked View: Tasks → Upcoming",
-      "/Linked view of database → Tasks → Ansicht „Upcoming“ wählen, Limit auf 5–10 Einträge setzen."
+      "Verknüpfte Ansicht: Aufgaben → Heute",
+      "/verknüpfte → Aufgaben → Ansicht „Heute“. Spalten: Aufgabe, Uhrzeit, Kunde, Priorität."
+    ),
+    manualSlot(
+      "Verknüpfte Ansicht: Leads → Heute kontaktieren",
+      "/verknüpfte → Leads → Ansicht „Heute kontaktieren“. Die fälligen Follow-ups."
     ),
 
     divider(),
 
-    /* ── ACTIVE PROJECTS ────────────────────────────────────────────── */
-    section("Active Projects"),
+    /* ── SALES ──────────────────────────────────────────────────────── */
+    section("Sales"),
+    columns([
+      [
+        h3("Neue Leads"),
+        manualSlot(
+          "Verknüpfte Ansicht: Leads → Neue Leads",
+          "/verknüpfte → Leads → Ansicht „Neue Leads“, Limit 5."
+        ),
+      ],
+      [
+        h3("Offene Angebote"),
+        manualSlot(
+          "Verknüpfte Ansicht: Angebote → Offen",
+          "/verknüpfte → Angebote → Ansicht „Offen“. Spalten: Angebotsname, Kunde, " +
+            "Gesamtpreis, Gültigkeit."
+        ),
+      ],
+    ]),
+    columns([[dbLink("leads") ?? p("")], [dbLink("angebote") ?? p("")]]),
+
+    divider(),
+
+    /* ── PROJEKTE ───────────────────────────────────────────────────── */
+    section("Projekte"),
     manualSlot(
-      "Linked View: Projects → Active",
-      "/Linked view of database → Projects → Ansicht „Active“ wählen. " +
-        "Spalten einblenden: Client, Deadline, Progress Bar, Open Tasks."
+      "Verknüpfte Ansicht: Projekte → Aktiv",
+      "/verknüpfte → Projekte → Ansicht „Aktiv“. Spalten: Projektname, Kunde, " +
+        "Frist, Fortschrittsbalken, Offene Aufgaben."
     ),
-    dbLink("projects"),
-
-    divider(),
-
-    /* ── CLIENTS ────────────────────────────────────────────────────── */
-    section("Clients"),
     columns([
       [
-        h3("Active Clients"),
+        h3("Wartet auf Kunden"),
         manualSlot(
-          "Linked View: Clients → Active Clients",
-          "/Linked view of database → Clients → Ansicht „Active Clients“ wählen."
+          "Verknüpfte Ansicht: Projekte → Kundenfeedback",
+          "/verknüpfte → Projekte → Ansicht „Kundenfeedback“."
         ),
       ],
       [
-        h3("Client Access"),
+        h3("Vor dem Launch"),
         manualSlot(
-          "Linked View: Clients → Active Clients",
-          "Zweite verknüpfte Ansicht derselben Datenbank. Nur die Spalten " +
-            "„Client Name“ und „Access Entries“ sichtbar lassen — ein Klick auf den " +
-            "Kunden öffnet die Kundenakte mit allen Zugängen."
+          "Verknüpfte Ansicht: Websites → Vor dem Launch",
+          "/verknüpfte → Websites → Ansicht „Vor dem Launch“."
         ),
       ],
     ]),
-    columns([[dbLink("clients") ?? p("")], [dbLink("access") ?? p("")]]),
+    columns([[dbLink("projekte") ?? p("")], [dbLink("websites") ?? p("")]]),
 
     divider(),
 
-    /* ── BUSINESS KPIs ──────────────────────────────────────────────── */
-    section("Business"),
-    parts([
-      [
-        "Die Zahlen entstehen aus den Datenbanken. Jede Kachel bekommt eine " +
-          "verknüpfte Ansicht, deren Summenzeile den Wert liefert — Schritt 3 in ",
-        { color: "gray" },
-      ],
-      ["docs/MANUELL-EINZURICHTEN.md", { code: true, color: "gray" }],
-      [".", { color: "gray" }],
-    ]),
+    /* ── TECHNIK ────────────────────────────────────────────────────── */
+    section("Technik"),
+    manualSlot(
+      "Verknüpfte Ansicht: Hosting & Domains → Domainverlängerungen",
+      "/verknüpfte → Hosting & Domains → Ansicht „Domainverlängerungen“. " +
+        "Steht hier, damit keine Domain unbemerkt abläuft."
+    ),
     columns([
-      [kpi("Revenue", "Invoices → Summe „Amount Paid“")],
-      [kpi("Expenses", "Expenses → Summe „Amount“")],
-      [kpi("Profit", "Revenue − Expenses")],
-      [kpi("Open Invoices", "Invoices → Summe „Amount Open“")],
+      [dbLink("hosting") ?? p("")],
+      [dbLink("zugaenge") ?? p("")],
     ]),
-    columns([
-      [kpi("Active Clients", "Clients → Ansicht „Active Clients“, Count")],
-      [kpi("Active Projects", "Projects → Ansicht „Active“, Count")],
-      [kpi("Leads", "Clients → Ansicht „Leads“, Count")],
-      [kpi("Open Tasks", "Tasks → Ansicht „Upcoming“, Count")],
-    ]),
-    pgLink("finance"),
-
-    divider(),
-
-    /* ── CALENDAR ───────────────────────────────────────────────────── */
-    section("Calendar"),
-    urls.googleCalendarEmbed
-      ? embed(urls.googleCalendarEmbed, "Google Calendar — zentrale Terminquelle")
-      : manualSlot(
-          "Google-Calendar-Embed fehlt noch",
-          "Einbettungs-URL aus den Kalendereinstellungen holen und in NOVERA_GCAL_EMBED_URL " +
-            "setzen, oder hier per /embed einfügen. Schritt 4 in docs/MANUELL-EINZURICHTEN.md."
-        ),
-    pgLink("calendar"),
 
     divider(),
 
@@ -215,45 +157,20 @@ export function hqBlocks({ db, pages, urls }) {
       [
         h3("Timer"),
         urls.focus
-          ? embed(urls.focus, "Fokuszeit — 25 Minuten Arbeit, 5 Minuten Pause")
+          ? embed(urls.focus, "25 Minuten Arbeit, 5 Minuten Pause")
           : manualSlot(
               "Fokus-Timer fehlt noch",
-              "Entsteht automatisch, sobald NOVERA_CLOCK_URL gesetzt ist — der Timer " +
-                "liegt unter derselben Adresse mit /focus.html."
+              "Entsteht automatisch, sobald NOVERA_CLOCK_URL gesetzt ist."
             ),
       ],
       [
-        h3("Now Playing"),
+        h3("Musik"),
         urls.spotifyEmbed
           ? embed(urls.spotifyEmbed, "Arbeitsplaylist")
           : manualSlot(
-              "Spotify-Playlist fehlt noch",
-              "Playlist-Link kopieren, NOVERA_SPOTIFY_URL setzen und neu bauen — oder den " +
-                "Link hier einfügen und „Embed“ wählen."
+              "Playlist fehlt noch",
+              "Spotify-Link kopieren, NOVERA_SPOTIFY_URL in .env setzen und neu bauen."
             ),
-      ],
-    ]),
-
-    divider(),
-
-    /* ── NOTES & IDEAS ──────────────────────────────────────────────── */
-    section("Notes & Ideas"),
-    columns([
-      [
-        h3("Recent Notes"),
-        manualSlot(
-          "Linked View: Notes → Recent",
-          "/Linked view of database → Notes → Ansicht „Recent“, Limit 5."
-        ),
-        dbLink("notes") ?? p(""),
-      ],
-      [
-        h3("Idea Inbox"),
-        manualSlot(
-          "Linked View: Ideas → Inbox",
-          "/Linked view of database → Ideas → Ansicht „Inbox“, Limit 5."
-        ),
-        dbLink("ideas") ?? p(""),
       ],
     ]),
 
@@ -263,438 +180,518 @@ export function hqBlocks({ db, pages, urls }) {
     section("Navigation"),
     columns([
       [
-        h3("Workspace"),
-        dbLink("tasks"), dbLink("projects"), dbLink("clients"),
-        pgLink("clientRecords"), pgLink("calendar"), pgLink("finance"),
-        dbLink("ideas"), dbLink("knowledge"), dbLink("notes"), pgLink("files"),
+        h3("Arbeitsbereiche"),
+        dbLink("leads"), dbLink("kunden"), dbLink("projekte"), dbLink("websites"),
+        dbLink("blueprints"), dbLink("angebote"), dbLink("aufgaben"),
+        dbLink("hosting"), dbLink("zugaenge"),
       ].filter(Boolean),
       [
-        h3("Google Workspace"),
-        ...GOOGLE_LINKS.map(([label, url, icon]) => linkItem(`${icon} ${label}`, url)),
-      ],
+        h3("Werkzeuge"),
+        ...NOVERA_TOOLS.map(([label, url, icon]) => linkItem(`${icon} ${label}`, url)),
+        pgLink("tools"),
+      ].filter(Boolean),
       [
-        h3("Business Tools"),
-        ...BUSINESS_TOOLS.map(([label, url, icon, note]) => linkItem(`${icon} ${label}`, url, note)),
-      ],
+        h3("System"),
+        pgLink("system"), pgLink("ai"), pgLink("dokumente"),
+      ].filter(Boolean),
     ]),
 
     divider(),
-    systemRulesToggle(),
+    systemregeln(),
   ]);
 }
 
-/** §28 — wer ist wofür zuständig. Als Toggle, damit das Dashboard ruhig bleibt. */
-function systemRulesToggle() {
-  return toggle("Systemregeln — welches Tool wofür", [
-    p("Jede Information hat genau einen Ort. Das verhindert doppelte Pflege."),
-    bullet(rtParts([["Notion", { bold: true }], [" — HQ, CRM, Projekte, Tasks, Anforderungen, Wissen, Notizen"]])),
-    bullet(rtParts([["Google Workspace", { bold: true }], [" — Mail, Kalender, Dateien, Dokumente, Meetings"]])),
-    bullet(rtParts([["Papierkram", { bold: true }], [" — Buchhaltung, Rechnungsstellung, Belege, Steuer"]])),
-    bullet(rtParts([["1Password", { bold: true }], [" — Passwörter, Passkeys, Recovery Codes"]])),
-    bullet(rtParts([["Claude", { bold: true }], [" — Systemaufbau, Dokumente, Struktur"]])),
-    bullet(rtParts([["ChatGPT", { bold: true }], [" — Strategie, Recherche, Analyse, Entscheidungen"]])),
+/** Wer ist wofür zuständig. Als Toggle, damit das Dashboard ruhig bleibt. */
+function systemregeln() {
+  return toggle("Was gehört wohin", [
+    p("Jede Information hat genau einen Ort. Das ist der Grund, warum es in Notion keine Rechnungen und keine Passwörter gibt."),
+    bullet(rtParts([["Notion", { bold: true }], [" — Leads, Kunden, Projekte, Websites, Blueprints, Angebote, Aufgaben, Hosting"]])),
+    bullet(rtParts([["Google Drive", { bold: true }], [" — alle Dateien. Notion hält nur den Ordnerlink."]])),
+    bullet(rtParts([["Papierkram", { bold: true }], [" — Buchhaltung, Rechnungen, Belege, Steuer."]])),
+    bullet(rtParts([["1Password", { bold: true }], [" — Passwörter, Passkeys, Recovery Codes."]])),
     p(""),
     quote("Notion dokumentiert, dass ein Zugang existiert. 1Password speichert ihn."),
   ]);
 }
 
-/* ═══════════════════════════════════════════════ KUNDENAKTE (Body) */
+/* ═════════════════════════════════════════════════════════ KUNDENAKTE */
 
 /**
- * Der Seitenkörper eines Kunden. Wird für den Musterkunden gesetzt und dient
- * als Vorlage für das Datenbank-Template (siehe MANUELL-EINZURICHTEN, Schritt 2).
+ * Seitenkörper eines Kunden. Wird beim Musterkunden gesetzt und dient als
+ * Vorlage für das Datenbank-Template.
  */
-export function clientFileBlocks() {
+export function kundenakteBlocks() {
   return [
     callout(
       rtParts([
         ["Kundenakte", { bold: true }],
-        ["  ·  Alles zu diesem Kunden an einem Ort. Stammdaten stehen oben in den Properties.", { color: "gray" }],
+        ["  ·  Stammdaten stehen oben in den Eigenschaften. Alles Weitere hängt über Relations daran.", { color: "gray" }],
       ]),
       "▪",
       "gray_background"
     ),
 
-    section("🚀 Projects"),
+    section("🚀 Projekte"),
     manualSlot(
-      "Linked View: Projects, gefiltert auf diesen Kunden",
-      "/Linked view of database → Projects → Filter: Client → enthält → diesen Kunden. " +
-        "Im Datenbank-Template genügt der Filter „Client enthält“ + Vorlagenvariable."
+      "Verknüpfte Ansicht: Projekte, gefiltert auf diesen Kunden",
+      "/verknüpfte → Projekte → Filter: Kunde enthält → „Diese Seite“."
     ),
 
-    section("📋 Tasks"),
+    section("📄 Angebote"),
     manualSlot(
-      "Linked View: Tasks, gefiltert auf diesen Kunden",
-      "/Linked view of database → Tasks → Filter: Client → enthält → diesen Kunden, " +
-        "Status ist nicht Done."
+      "Verknüpfte Ansicht: Angebote, gefiltert auf diesen Kunden",
+      "/verknüpfte → Angebote → Filter: Kunde enthält → „Diese Seite“. " +
+        "Summenzeile bei Gesamtpreis auf Summe stellen."
     ),
 
-    section("🌐 Website Requirements"),
-    p("Was der Kunde für seine Website möchte — strukturiert in der Datenbank, Details hier."),
+    section("🌐 Website & Blueprint"),
     manualSlot(
-      "Linked View: Website Requirements, gefiltert auf diesen Kunden",
-      "/Linked view of database → Website Requirements → Filter: Client → enthält → diesen Kunden."
-    ),
-    toggle("Fragenkatalog für das Erstgespräch", [
-      bullet("Welche Seiten soll die Website haben?"),
-      bullet("Welcher Stil? Hell oder dunkel, ruhig oder auffällig?"),
-      bullet("Gibt es Farben, ein Logo, ein bestehendes Branding?"),
-      bullet("Wer liefert Texte? Wer liefert Bilder?"),
-      bullet("Welche Funktionen: Formular, WhatsApp, Maps, Newsletter, Terminbuchung?"),
-      bullet("Welche Kontaktmöglichkeiten sollen sichtbar sein?"),
-      bullet("Social Media verlinken? Welche Kanäle?"),
-      bullet("SEO-Wünsche? Welche Suchbegriffe sind wichtig?"),
-      bullet("Besondere Anforderungen mobil?"),
-      bullet("Referenz-Websites, die gefallen?"),
-      bullet("Was ist ausdrücklich NICHT gewünscht?"),
-      bullet("Bis wann soll die Seite live sein?"),
-    ]),
-
-    section("💬 Communication"),
-    p("Jedes relevante Gespräch als Eintrag — damit später nachvollziehbar bleibt, was besprochen wurde."),
-    manualSlot(
-      "Linked View: Client Communication, gefiltert auf diesen Kunden",
-      "/Linked view of database → Client Communication → Filter: Client → enthält → diesen Kunden, " +
-        "sortiert nach Date absteigend."
+      "Verknüpfte Ansicht: Websites, gefiltert auf diesen Kunden",
+      "/verknüpfte → Websites → Filter: Kunde enthält → „Diese Seite“. " +
+        "Der Blueprint hängt an der Website und ist von dort aus einen Klick entfernt."
     ),
 
-    section("🔐 Access"),
+    section("✅ Aufgaben"),
+    manualSlot(
+      "Verknüpfte Ansicht: Aufgaben, gefiltert auf diesen Kunden",
+      "/verknüpfte → Aufgaben → Filter: Kunde enthält → „Diese Seite“, Status ist nicht Erledigt."
+    ),
+
+    section("☁️ Hosting & Domain"),
+    manualSlot(
+      "Verknüpfte Ansicht: Hosting & Domains, gefiltert auf diesen Kunden",
+      "/verknüpfte → Hosting & Domains → Filter: Kunde enthält → „Diese Seite“."
+    ),
+
+    section("🔐 Zugänge"),
     callout(
       rtParts([
-        ["Keine Klartext-Passwörter in Notion.", { bold: true }],
-        ["  Hier steht nur, WELCHE Zugänge existieren. Die Passwörter liegen in 1Password.", { color: "gray" }],
+        ["Keine Passwörter in Notion.", { bold: true }],
+        ["  Hier steht nur, welche Zugänge existieren. Die Passwörter liegen in 1Password.", { color: "gray" }],
       ]),
       "🔐",
       "red_background"
     ),
     manualSlot(
-      "Linked View: Client Access, gefiltert auf diesen Kunden",
-      "/Linked view of database → Client Access → Filter: Client → enthält → diesen Kunden."
+      "Verknüpfte Ansicht: Zugänge, gefiltert auf diesen Kunden",
+      "/verknüpfte → Zugänge → Filter: Kunde enthält → „Diese Seite“."
     ),
 
-    section("💰 Finance"),
-    manualSlot(
-      "Linked View: Invoices, gefiltert auf diesen Kunden",
-      "/Linked view of database → Invoices → Filter: Client → enthält → diesen Kunden. " +
-        "In der Summenzeile „Amount“ auf Sum stellen."
-    ),
+    section("📁 Dateien"),
+    p("Alle Dateien liegen in Google Drive. Der Ordnerlink steht oben in der Eigenschaft „Google Drive“."),
 
-    section("📁 Files"),
-    p("Dateien liegen in Google Drive, nicht in Notion. Der Drive-Link steht oben in den Properties."),
-
-    section("📝 Notes"),
-    manualSlot(
-      "Linked View: Notes, gefiltert auf diesen Kunden",
-      "/Linked view of database → Notes → Filter: Client → enthält → diesen Kunden."
-    ),
+    section("📝 Notizen"),
+    p("Freier Bereich. Gesprächsnotizen, Besonderheiten, Absprachen — was später nachvollziehbar sein soll."),
+    bullet("Beispiel: 23.08. Telefonat — zusätzliche Leistungsseite gewünscht, Bilder folgen."),
   ];
 }
 
-/* ═══════════════════════════════════════════════ PROJEKTSEITE (Body) */
+/* ═══════════════════════════════════════════════════ PROJEKTSEITE */
 
-export function projectPageBlocks() {
+/** Seitenkörper eines Projekts, mit der vollständigen Website-Checkliste. */
+export function projektBlocks() {
   return [
     callout(
       rtParts([
-        ["Projektseite", { bold: true }],
-        ["  ·  Ziel, Kunde, Deadline, Status und Fortschritt stehen oben in den Properties.", { color: "gray" }],
+        ["Website-Projekt", { bold: true }],
+        ["  ·  Kunde, Deadline, Preis und Fortschritt stehen oben in den Eigenschaften.", { color: "gray" }],
       ]),
       "▪",
       "gray_background"
     ),
 
-    section("Overview"),
-    p("Was soll am Ende herauskommen? Zwei bis drei Sätze — knapp genug, dass man sie im Vorbeigehen liest."),
+    section("Ziel"),
+    p("Was soll die Website erreichen? Zwei, drei Sätze — kurz genug, dass man sie im Vorbeigehen liest."),
 
-    section("Tasks"),
+    section("Aufgaben"),
     manualSlot(
-      "Linked View: Tasks, gefiltert auf dieses Projekt",
-      "/Linked view of database → Tasks → Filter: Project → enthält → dieses Projekt."
+      "Verknüpfte Ansicht: Aufgaben, gefiltert auf dieses Projekt",
+      "/verknüpfte → Aufgaben → Filter: Projekt enthält → „Diese Seite“."
     ),
 
-    section("Client Requirements"),
-    manualSlot(
-      "Linked View: Website Requirements, gefiltert auf dieses Projekt",
-      "/Linked view of database → Website Requirements → Filter: Project → enthält → dieses Projekt."
-    ),
+    section("Checkliste"),
+    p("Der komplette Weg von der Konzeption bis zum Launch."),
 
-    section("Files"),
-    p("Google-Drive-Ordner dieses Projekts — Link steht oben in der Property „Google Drive“."),
+    h3("Konzept"),
+    todo("Kundenanalyse"),
+    todo("Zielgruppe"),
+    todo("Ziel der Website"),
+    todo("Seitenstruktur"),
+    todo("Handlungsaufforderung festgelegt"),
+    todo("SEO-Konzept"),
 
-    section("Notes"),
-    manualSlot(
-      "Linked View: Notes, gefiltert auf dieses Projekt",
-      "/Linked view of database → Notes → Filter: Project → enthält → dieses Projekt."
-    ),
+    h3("Branding"),
+    todo("Logo"),
+    todo("Farben"),
+    todo("Typografie"),
+    todo("Bildsprache"),
 
-    section("Finance"),
-    manualSlot(
-      "Linked View: Invoices, gefiltert auf dieses Projekt",
-      "/Linked view of database → Invoices → Filter: Project → enthält → dieses Projekt."
-    ),
+    h3("Mockups"),
+    todo("Desktop"),
+    todo("Mobile"),
+    todo("Mockups sauber ausgerichtet, keine Überlappungen"),
+    todo("Blueprint vom Kunden freigegeben"),
+
+    h3("Entwicklung"),
+    todo("Desktop"),
+    todo("Tablet"),
+    todo("Mobile"),
+    todo("Navigation"),
+    todo("Formulare"),
+    todo("Buttons"),
+    todo("Animationen"),
+
+    h3("SEO"),
+    todo("Meta Titles"),
+    todo("Meta Descriptions"),
+    todo("Überschriftenstruktur"),
+    todo("Alt-Texte"),
+    todo("Sprechende URLs"),
+    todo("Lokale SEO"),
+    todo("Google-Unternehmensprofil verknüpft"),
+
+    h3("Qualität"),
+    todo("Ladezeit geprüft, Bilder komprimiert"),
+    todo("Barrierefreiheit: Kontraste, Tastaturbedienung"),
+    todo("Alle Links funktionieren"),
+    todo("Formular getestet — Mail kommt tatsächlich an"),
+    todo("In mehreren Browsern geprüft"),
+
+    h3("Abnahme"),
+    todo("Interne Prüfung"),
+    todo("Kunde erhält Vorschau"),
+    todo("Feedback eingeholt"),
+    todo("Änderungen umgesetzt"),
+    todo("Finale Freigabe schriftlich"),
+
+    h3("Launch"),
+    todo("Domain verbunden"),
+    todo("Hosting eingerichtet"),
+    todo("SSL aktiv"),
+    todo("Backup eingerichtet"),
+    todo("Live geschaltet"),
+    todo("Finale Prüfung nach dem Livegang"),
+    todo("Zugänge in der Zugänge-Datenbank dokumentiert"),
+    todo("Novera Care besprochen"),
+
+    section("Notizen"),
+    p("Projektbezogene Informationen, Absprachen, offene Punkte."),
   ];
 }
 
-/* ══════════════════════════════════════════════════ BEREICHSSEITEN */
+/* ═══════════════════════════════════════════════════════ BLUEPRINT */
 
-export function googleWorkspaceBlocks() {
+/** Seitenkörper eines Blueprints — der eigentliche Bauplan. */
+export function blueprintBlocks() {
   return [
-    h1("Google Workspace"),
-    p("Kommunikation und Dateien laufen über Google. Notion verlinkt nur — es speichert nichts doppelt."),
-    divider(),
-    ...GOOGLE_LINKS.map(([label, url, icon]) => bookmark(url, `${icon} ${label}`)),
+    callout(
+      rtParts([
+        ["Website Blueprint", { bold: true }],
+        ["  ·  Version und Freigabestatus stehen oben. Ist der Kunde freigegeben, wird danach gebaut.", { color: "gray" }],
+      ]),
+      "🧠",
+      "gray_background"
+    ),
+
+    section("Branding"),
+    bullet(rtParts([["Logo", { bold: true }], [" — Datei, Varianten, Mindestabstände"]])),
+    bullet(rtParts([["Farben", { bold: true }], [" — Primär, Sekundär, Hintergrund, Text (mit Hex-Werten)"]])),
+    bullet(rtParts([["Typografie", { bold: true }], [" — Überschrift, Fließtext, Größen"]])),
+    bullet(rtParts([["Bildsprache", { bold: true }], [" — Stimmung, Motive, was vermieden wird"]])),
+
+    section("Seitenstruktur"),
+    p("Welche Seiten entstehen, und was steht auf jeder."),
+    bullet("Startseite"),
+    bullet("Leistungen"),
+    bullet("Über uns"),
+    bullet("Kontakt"),
+    bullet("Impressum, Datenschutz"),
+
+    section("Startseite im Detail"),
+    numbered("Hero — Aussage, Bild, Handlungsaufforderung"),
+    numbered("Alleinstellungsmerkmale — drei bis vier Punkte"),
+    numbered("Leistungen"),
+    numbered("Über uns"),
+    numbered("Referenzen"),
+    numbered("Bewertungen"),
+    numbered("Abschließende Handlungsaufforderung"),
+
+    section("Navigation"),
+    columns([
+      [h3("Desktop"), p("Aufbau, Reihenfolge, Verhalten beim Scrollen.")],
+      [h3("Mobile"), p("Menüart, Reihenfolge, was sichtbar bleibt.")],
+    ]),
+
+    section("Komponenten"),
+    bullet("Buttons — Zustände: normal, Hover, aktiv"),
+    bullet("Cards"),
+    bullet("Formulare — Felder, Pflichtangaben, Bestätigung"),
+    bullet("Galerie"),
+    bullet("Testimonials"),
+    bullet("Handlungsaufforderung"),
+
+    section("Animationen"),
+    p("Je Animation: was, wodurch ausgelöst, wie schnell, und wie es sich mobil verhält."),
+    bullet("Beispiel: Abschnitte blenden beim Scrollen ein · Auslöser 20 % sichtbar · 400 ms · mobil aus"),
+
+    section("Responsive"),
+    bullet("Desktop ab 1200 px"),
+    bullet("Tablet 768–1199 px"),
+    bullet("Mobile bis 767 px"),
+
+    section("SEO"),
+    bullet("Keywords"),
+    bullet("Zielregion"),
+    bullet("Meta Titles je Seite"),
+    bullet("Meta Descriptions je Seite"),
+    bullet("Überschriftenstruktur"),
+
+    section("Mockups"),
+    p("Die Links stehen oben in den Eigenschaften. Die Dateien selbst liegen in Google Drive."),
+
+    section("Freigabe"),
+    callout(
+      rtParts([
+        ["Erst freigeben, dann bauen.", { bold: true }],
+        ["  Version hochzählen statt überschreiben — so bleibt nachvollziehbar, was der Kunde " +
+         "wann freigegeben hat.", { color: "gray" }],
+      ]),
+      "✓",
+      "gray_background"
+    ),
+    toggle("Wie die Versionierung gedacht ist", [
+      bullet("v1 · Konzept — erster Entwurf, geht zum Kunden"),
+      bullet("v2 · Kundenänderungen — Rückmeldung eingearbeitet"),
+      bullet("v3 · final — Kundenfreigabe gesetzt, Freigabedatum eingetragen"),
+      p(""),
+      p("Ältere Stände bekommen den Status „Überholt“ und verschwinden damit aus der " +
+        "Ansicht „Aktuelle Version“ — bleiben aber als Nachweis erhalten."),
+    ]),
+  ];
+}
+
+/* ═══════════════════════════════════════════════════════ ANGEBOTSSEITE */
+
+export function angebotBlocks() {
+  return [
+    callout(
+      rtParts([
+        ["Angebot", { bold: true }],
+        ["  ·  Die Posten stehen oben in den Eigenschaften, der Gesamtpreis rechnet sich daraus.", { color: "gray" }],
+      ]),
+      "📄",
+      "gray_background"
+    ),
+    section("Leistungsumfang"),
+    p("Was genau enthalten ist — in der Sprache des Kunden, nicht in Fachbegriffen."),
+    bullet("Website mit den vereinbarten Seiten"),
+    bullet("Mobile Optimierung"),
+    bullet("Grundlegende Suchmaschinenoptimierung"),
+    bullet("Kontaktformular"),
+    bullet("Einrichtung von Domain und Hosting"),
+
+    section("Nicht enthalten"),
+    p("Ebenso wichtig: was ausdrücklich nicht Teil des Angebots ist."),
+
+    section("Ablauf"),
+    numbered("Blueprint erstellen und abstimmen"),
+    numbered("Freigabe durch den Kunden"),
+    numbered("Umsetzung"),
+    numbered("Vorschau und Feedback"),
+    numbered("Finale Freigabe"),
+    numbered("Livegang"),
+
+    section("Nächster Schritt"),
+    p("Was passiert, wenn der Kunde zusagt — und bis wann das Angebot gilt."),
     divider(),
     callout(
-      "Links öffnen im Browser-Tab. Damit sie immer im richtigen Konto landen, in Chrome ein " +
-        "eigenes Profil für Novera Studio anlegen und Notion darin öffnen.",
+      "Das PDF entsteht in Google Docs, die Rechnung später in Papierkram. " +
+        "Notion hält nur Status und Link.",
       "💡",
       "gray_background"
     ),
   ];
 }
 
-export function businessToolsBlocks() {
+/* ═══════════════════════════════════════════════════════ LEAD-SEITE */
+
+export function leadBlocks() {
   return [
-    h1("Business Tools"),
-    p("Die Werkzeuge außerhalb von Notion — jedes mit klarer Zuständigkeit."),
+    callout(
+      rtParts([
+        ["Lead", { bold: true }],
+        ["  ·  Kontaktdaten und Bewertung stehen oben. Hier steht, was besprochen wurde.", { color: "gray" }],
+      ]),
+      "🎯",
+      "gray_background"
+    ),
+    section("Warum dieser Lead"),
+    p("Was an der aktuellen Website oder dem Auftritt auffällt — der Aufhänger für das Gespräch."),
+    bullet("Beispiel: keine mobile Ansicht, Ladezeit über fünf Sekunden, kein Impressum"),
+
+    section("Gesprächsverlauf"),
+    p("Datum und Ergebnis je Kontakt. Kurz halten."),
+    bullet("23.08. — Erstkontakt per Mail, keine Antwort"),
+    bullet("27.08. — Nachfass per Telefon, Interesse, Angebot gewünscht"),
+
+    section("Nächster Schritt"),
+    p("Genau eine Sache. Das Datum dafür steht oben in „Nächstes Follow-up“."),
+  ];
+}
+
+/* ══════════════════════════════════════════════════════ BEREICHSSEITEN */
+
+export function toolsBlocks() {
+  return [
+    h1("Novera Tools"),
+    p("Alles, was außerhalb von Notion läuft."),
     divider(),
-    ...BUSINESS_TOOLS.flatMap(([label, url, icon, note]) => [
+    ...NOVERA_TOOLS.flatMap(([label, url, icon, note]) => [
       bookmark(url, `${icon} ${label}`),
       parts([[note, { color: "gray" }]]),
     ]),
     divider(),
-    section("Zuständigkeiten"),
-    bullet(rtParts([["Papierkram", { bold: true }], [" — Buchhaltung. Rechnungen werden dort erstellt und verbucht. Notion zeigt nur den Status."]])),
-    bullet(rtParts([["1Password", { bold: true }], [" — der einzige Ort für Passwörter, Passkeys und Recovery Codes."]])),
-    bullet(rtParts([["Claude", { bold: true }], [" — Systemaufbau, Struktur, Dokumente."]])),
-    bullet(rtParts([["ChatGPT", { bold: true }], [" — Strategie, Recherche, Analyse."]])),
+    callout(
+      "Damit die Links immer im richtigen Konto landen: in Chrome ein eigenes Profil " +
+        "für Novera Studio anlegen und Notion darin öffnen.",
+      "💡",
+      "gray_background"
+    ),
   ];
 }
 
-export function calendarPageBlocks(urls) {
-  return compact([
-    h1("Calendar"),
-    p("Google Calendar ist die zentrale Terminquelle. Notion führt bewusst keinen zweiten Kalender — " +
-      "sonst müsste jeder Termin zweimal gepflegt werden."),
+export function aiBlocks() {
+  return [
+    h1("Novera AI"),
+    p("Vorbereitete Claude-Projekte je Arbeitsbereich. Ein Projekt je Aufgabe hält den " +
+      "Kontext sauber — statt alles in einer langen Unterhaltung zu vermischen."),
     divider(),
-    urls.googleCalendarEmbed
-      ? embed(urls.googleCalendarEmbed, "Google Calendar")
-      : manualSlot(
-          "Google-Calendar-Embed fehlt noch",
-          "Google Calendar → Einstellungen → Kalender → „Kalender integrieren“ → die URL aus dem " +
-            "iframe-Code kopieren. Dann hier /embed einfügen. Schritt 4 in docs/MANUELL-EINZURICHTEN.md."
-        ),
-    bookmark("https://calendar.google.com", "📅 Google Calendar öffnen"),
+
+    ...[
+      ["Novera Studio · Master", "Systemaufbau, Struktur, übergreifende Fragen"],
+      ["Novera Studio · Sales", "Ansprache, Follow-ups, Einwandbehandlung"],
+      ["Novera Studio · Angebote", "Angebotstexte, Leistungsbeschreibungen, Preisgespräche"],
+      ["Novera Studio · Websites", "Blueprints, Texte, Code, SEO"],
+    ].flatMap(([name, zweck]) => [
+      callout(
+        rtParts([
+          [name, { bold: true }],
+          ["\n" + zweck, { color: "gray" }],
+          ["\nLink eintragen, sobald das Projekt in Claude angelegt ist.", { color: "gray", italic: true }],
+        ]),
+        "🤖",
+        "gray_background"
+      ),
+    ]),
+
     divider(),
-    section("Deadlines aus Notion"),
-    p("Termine stehen in Google. Deadlines stehen in Notion — hier zusammengeführt."),
-    manualSlot(
-      "Linked View: Projects → Deadlines",
-      "/Linked view of database → Projects → Ansicht „Deadlines“ wählen."
-    ),
-    manualSlot(
-      "Linked View: Tasks → Calendar",
-      "/Linked view of database → Tasks → Ansicht „Calendar“ wählen."
-    ),
-  ]);
+    bookmark("https://claude.ai", "🤖 Claude öffnen"),
+  ];
 }
 
-export function filesPageBlocks(urls) {
+export function dokumenteBlocks(urls) {
   return compact([
-    h1("Files"),
-    p("Google Drive ist der Dateispeicher. Notion verlinkt nur — so gibt es keine zweite Version einer Datei."),
-    divider(),
+    h1("Dokumente"),
+    callout(
+      rtParts([
+        ["Google Drive ist die Ablage.", { bold: true }],
+        ["  Notion verwaltet keine Dateien — es hält nur die Ordnerlinks. So gibt es nie " +
+         "zwei Versionen derselben Datei.", { color: "gray" }],
+      ]),
+      "📁",
+      "gray_background"
+    ),
     urls.driveRoot
       ? bookmark(urls.driveRoot, "📁 Novera Studio Drive")
       : bookmark("https://drive.google.com", "📁 Google Drive"),
     divider(),
+
     section("Ordnerstruktur"),
-    p("Bewährte Struktur — jeder Kunde bekommt denselben Aufbau:"),
+    p("Jeder Kunde bekommt denselben Aufbau. Der Link zum Kundenordner gehört in die " +
+      "Eigenschaft „Google Drive“ beim Kunden, der Projektordner in dieselbe Eigenschaft beim Projekt."),
     code(
 `Novera Studio/
-├── 01 Clients/
-│   └── <Kundenname>/
-│       ├── Branding/          Logo, Farben, Schriften
-│       ├── Content/           Texte, Bilder, Videos
-│       ├── Website/           Entwürfe, Exporte
-│       ├── Contracts/         Verträge, Angebote
-│       └── Invoices/          Rechnungs-PDFs
-├── 02 Projects/
-├── 03 Novera Internal/        Branding, Vorlagen, Präsentationen
-├── 04 Finance/                Belege, Auswertungen
-└── 05 Templates/`,
+├── 01 Kunden/
+│   └── <Firmenname>/
+│       ├── Angebote/
+│       ├── Verträge/
+│       ├── Briefings/
+│       ├── Branding/        Logo, Farben, Schriften
+│       ├── Content/         Texte, Bilder
+│       └── Website/         Mockups, Exporte
+├── 02 Novera intern/        eigenes Branding, Vorlagen
+└── 03 Vorlagen/`,
       "plain text"
     ),
-    callout(
-      "Der Drive-Link jedes Kunden gehört in die Property „Google Drive“ der Clients-Datenbank, " +
-        "der Projektordner in die gleichnamige Property bei Projects.",
-      "💡",
-      "gray_background"
-    ),
+
+    section("Was wo liegt"),
+    bullet(rtParts([["Angebote", { bold: true }], [" — als Google Doc, PDF-Link im Angebot hinterlegt"]])),
+    bullet(rtParts([["Verträge", { bold: true }], [" — unterschrieben als PDF im Kundenordner"]])),
+    bullet(rtParts([["Mockups", { bold: true }], [" — im Website-Ordner, Link im Blueprint"]])),
+    bullet(rtParts([["Rechnungen", { bold: true }], [" — ausschließlich in Papierkram"]])),
   ]);
 }
 
-export function financePageBlocks({ db }) {
+export function systemBlocks({ db }) {
   return compact([
-    h1("Finance"),
-    callout(
-      rtParts([
-        ["Papierkram bleibt die Buchhaltung.", { bold: true }],
-        ["  Rechnungen werden dort erstellt und verbucht. Notion zeigt nur die Geschäftssicht: " +
-          "was ist offen, was ist bezahlt, wie steht der Monat.", { color: "gray" }],
-      ]),
-      "🧾",
-      "gray_background"
-    ),
-    bookmark("https://www.papierkram.de", "🧾 Papierkram öffnen"),
+    h1("System"),
+    p("Wie Novera Studio arbeitet — der Ablauf und die Regeln dahinter."),
     divider(),
 
-    section("Open Invoices"),
-    manualSlot(
-      "Linked View: Invoices → Open",
-      "/Linked view of database → Invoices → Ansicht „Open“. In der Summenzeile unter „Amount Open“ auf Sum stellen."
+    section("Der Weg vom Lead zum Kunden"),
+    code(
+`Lead gefunden        →  Leads, Status „Neuer Lead“
+Qualifiziert         →  Lead Score und Sales Angle setzen
+Erstkontakt          →  Status „Erstkontakt“, Follow-up-Datum setzen
+Antwort erhalten     →  Status „Antwort erhalten“
+Angebot              →  Angebot anlegen, mit dem Lead verknüpfen
+Gespräch             →  Status „Verhandlung“
+Gewonnen             →  Kunde anlegen, Lead verknüpfen, Status „Gewonnen“
+                        ↓
+Projekt              →  Projekt anlegen, Kunde verknüpfen
+Blueprint            →  Website anlegen, Blueprint erstellen
+Freigabe             →  Kundenfreigabe setzen, Version festhalten
+Entwicklung          →  Checkliste im Projekt abarbeiten
+Feedback             →  Status „Kundenfeedback“
+Abnahme              →  Status „Freigegeben“
+Live                 →  Website auf „Live“, Launchdatum setzen
+Hosting              →  Eintrag in Hosting & Domains
+Novera Care          →  Haken beim Kunden, Monatsbetrag eintragen`,
+      "plain text"
     ),
 
-    section("Overdue Invoices"),
-    manualSlot(
-      "Linked View: Invoices → Overdue",
-      "/Linked view of database → Invoices → Ansicht „Overdue“."
-    ),
+    section("Regeln"),
+    numbered("Eine Aufgabe wird einmal angelegt und über Relations verknüpft — nie doppelt."),
+    numbered("Dateien liegen in Google Drive, Notion hält den Link."),
+    numbered("Rechnungen entstehen in Papierkram, nicht in Notion."),
+    numbered("Passwörter stehen in 1Password. In Notion steht nur, dass ein Zugang existiert."),
+    numbered("Ein Blueprint wird freigegeben, bevor gebaut wird. Änderungen danach = neue Version."),
 
-    section("Paid"),
-    manualSlot(
-      "Linked View: Invoices → Paid",
-      "/Linked view of database → Invoices → Ansicht „Paid“. Summenzeile „Amount Paid“ → Sum."
-    ),
+    section("Wochenrhythmus"),
+    h3("Täglich · 5 Minuten"),
+    bullet("Dashboard öffnen, „Überfällig“ und „Heute“ durchgehen"),
+    bullet("Fällige Follow-ups aus „Heute kontaktieren“ abarbeiten"),
+    h3("Wöchentlich · 20 Minuten"),
+    bullet("Leads durchgehen: Status und Follow-up-Daten aktualisieren"),
+    bullet("Angebote → „Offen“ prüfen, nachfassen wo nötig"),
+    bullet("Projekte → Fortschritt und Deadlines prüfen"),
+    h3("Monatlich · 20 Minuten"),
+    bullet("Hosting & Domains → „Domainverlängerungen“ prüfen"),
+    bullet("Zugänge → „Ohne 2FA“ nachziehen"),
+    bullet("Novera-Care-Kunden gegen Papierkram abgleichen"),
 
-    section("Expenses"),
-    manualSlot(
-      "Linked View: Expenses → This Month",
-      "/Linked view of database → Expenses → Ansicht „This Month“. Summenzeile „Amount“ → Sum."
-    ),
-
-    section("Monthly Overview"),
-    p("Umsatz minus Ausgaben je Monat. Notion rechnet das nicht von allein über Monate hinweg — " +
-      "die belastbare Auswertung steht in Papierkram."),
-    toggle("Wie der Monatsblick funktioniert", [
-      numbered("In „Invoices → Paid“ nach Date gruppieren, Gruppierung auf Monat stellen."),
-      numbered("Summenzeile je Gruppe auf „Amount Paid → Sum“ setzen."),
-      numbered("Dasselbe in „Expenses“ mit „Amount → Sum“."),
-      numbered("Für Steuer und Jahresabschluss zählt ausschließlich Papierkram."),
-    ]),
     divider(),
+    section("Datenbanken"),
     ...compact([
-      db.invoices ? linkToDatabase(db.invoices.databaseId) : null,
-      db.expenses ? linkToDatabase(db.expenses.databaseId) : null,
+      db.leads ? linkToDatabase(db.leads.databaseId) : null,
+      db.kunden ? linkToDatabase(db.kunden.databaseId) : null,
+      db.projekte ? linkToDatabase(db.projekte.databaseId) : null,
+      db.websites ? linkToDatabase(db.websites.databaseId) : null,
+      db.blueprints ? linkToDatabase(db.blueprints.databaseId) : null,
+      db.angebote ? linkToDatabase(db.angebote.databaseId) : null,
+      db.aufgaben ? linkToDatabase(db.aufgaben.databaseId) : null,
+      db.hosting ? linkToDatabase(db.hosting.databaseId) : null,
+      db.zugaenge ? linkToDatabase(db.zugaenge.databaseId) : null,
     ]),
   ]);
-}
-
-export function clientRecordsBlocks({ db }) {
-  return compact([
-    h1("Client Records"),
-    p("Die drei Datenbanken, die zur Kundenakte gehören. Im Alltag öffnest du sie über den Kunden — " +
-      "hier liegen sie als Ganzes."),
-    divider(),
-    section("🔐 Client Access"),
-    p("Welche Zugänge existieren. Ohne Passwörter."),
-    db.access ? linkToDatabase(db.access.databaseId) : null,
-    section("🌐 Website Requirements"),
-    p("Was der Kunde für seine Website möchte — und was ausdrücklich nicht."),
-    db.requirements ? linkToDatabase(db.requirements.databaseId) : null,
-    section("💬 Client Communication"),
-    p("Gesprächsprotokoll je Kunde."),
-    db.communication ? linkToDatabase(db.communication.databaseId) : null,
-  ]);
-}
-
-/* ═════════════════════════════════════════════ KNOWLEDGE-STARTSEITEN */
-
-export const KNOWLEDGE_SEED = [
-  {
-    title: "Client Onboarding",
-    category: "Client Process",
-    status: "Active",
-    tags: ["Onboarding"],
-    body: [
-      p("Ablauf vom Ja des Kunden bis zum Projektstart."),
-      numbered("Kunde in Clients anlegen, Status auf Active, „Client Since“ setzen."),
-      numbered("Drive-Ordner nach Standardstruktur anlegen, Link in die Property „Google Drive“."),
-      numbered("1Password: Eintrag unter Clients → <Kundenname> anlegen."),
-      numbered("Projekt in Projects anlegen und mit dem Kunden verknüpfen."),
-      numbered("Website Requirements ausfüllen — Fragenkatalog steht in der Kundenakte."),
-      numbered("Kickoff-Termin in Google Calendar, Notiz in Client Communication."),
-      numbered("Angebot in Papierkram erstellen, Rechnung in Invoices spiegeln."),
-    ],
-  },
-  {
-    title: "Website Launch Checklist",
-    category: "Website Process",
-    status: "Active",
-    tags: ["Development"],
-    body: [
-      p("Vor dem Livegang durchgehen. Kein Punkt wird überspringen."),
-      todo("Alle Seiten aus „Pages Wanted“ vorhanden"),
-      todo("Mobile geprüft: iPhone und Android, Hoch- und Querformat"),
-      todo("Kontaktformular getestet — Mail kommt tatsächlich an"),
-      todo("Impressum und Datenschutz vorhanden und aktuell"),
-      todo("Favicon, Seitentitel und Meta-Beschreibungen gesetzt"),
-      todo("Google Search Console verbunden, Sitemap eingereicht"),
-      todo("Ladezeit geprüft, Bilder komprimiert"),
-      todo("SSL aktiv, www und non-www leiten sauber weiter"),
-      todo("Zugänge in Client Access dokumentiert, Passwörter in 1Password"),
-      todo("Backup eingerichtet"),
-      todo("Abnahme durch den Kunden schriftlich in Client Communication festgehalten"),
-    ],
-  },
-  {
-    title: "Zugänge sicher übernehmen",
-    category: "SOP",
-    status: "Active",
-    tags: ["Tools", "Legal"],
-    body: [
-      callout(
-        "Passwörter niemals per E-Mail, WhatsApp oder Notion annehmen. " +
-          "Wenn ein Kunde das tut: Passwort danach ändern.",
-        "🔐",
-        "red_background"
-      ),
-      numbered("Kunden bitten, den Zugang über den 1Password-Freigabelink zu senden."),
-      numbered("Eintrag in 1Password unter Clients → <Kundenname> → <Dienst> ablegen."),
-      numbered("In Client Access dokumentieren: Service, Username, Login-URL, Account Owner, 2FA."),
-      numbered("„Password Manager Reference“ auf den 1Password-Pfad setzen."),
-      numbered("2FA aktivieren, Recovery Codes in 1Password sichern."),
-      p("Das Feld „Password“ in Client Access ist eine feste Formel und lässt sich nicht " +
-        "mit Klartext überschreiben — das ist Absicht."),
-    ],
-  },
-  {
-    title: "Wochenrhythmus",
-    category: "Process",
-    status: "Active",
-    tags: [],
-    body: [
-      p("Damit das System gepflegt bleibt, ohne dass Pflege zum Projekt wird."),
-      h3("Täglich · 5 Minuten"),
-      bullet("HQ öffnen, „Today“ und „Overdue“ durchgehen"),
-      bullet("Neue Aufgaben in den Task-Inbox werfen, nicht sofort sortieren"),
-      h3("Wöchentlich · 20 Minuten"),
-      bullet("Task-Inbox leeren: Status, Priority, Due Date, Client/Project setzen"),
-      bullet("Clients → „Follow Up“ durchgehen und Next Contact neu setzen"),
-      bullet("Invoices → „Overdue“ prüfen, gegebenenfalls in Papierkram mahnen"),
-      bullet("Projects → Fortschritt und Deadlines prüfen"),
-      h3("Monatlich · 30 Minuten"),
-      bullet("Finance-Seite durchgehen, Zahlen gegen Papierkram abgleichen"),
-      bullet("Expenses → „Recurring“ prüfen: läuft etwas mit, das keiner mehr braucht?"),
-      bullet("Client Access → „No 2FA“ prüfen und nachziehen"),
-      bullet("Ideen-Inbox sichten"),
-    ],
-  },
-];
-
-/* ────────────────────────────────────────────────────────────── Helfer */
-
-/** Entfernt null/undefined aus Blocklisten — spart überall ein `.filter`. */
-function compact(arr) {
-  return arr.filter(Boolean);
 }
