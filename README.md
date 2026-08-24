@@ -20,8 +20,8 @@ npm run build
 |---|---|
 | **9 Datenbanken** | Leads · Kunden · Projekte · Websites · Website Blueprints · Angebote · Aufgaben · Hosting & Domains · Zugänge |
 | **156 Properties** | inklusive 14 Relationspaare, 16 Formeln, 6 Rollups |
-| **51 Ansichten** | Heute · Überfällig · Heute kontaktieren · Angebote offen · Domainverlängerungen · Trichter … |
-| **4 Seiten** | HQ · Novera Tools · Dokumente · System |
+| **52 Ansichten** | Heute · Überfällig · Heute kontaktieren · Angebote offen · Domainverlängerungen · Trichter … |
+| **5 Seiten** | Dashboard · Kalender · Novera Tools · Dokumente · System |
 | **Ambiente-Licht** | Cover, getönte Sektionsbänder, weiche Lichtwolken — abschaltbar über `NOVERA_AMBIENT=off` |
 | **Beispieldaten** | der komplette Ablauf: Lead, gewonnener Kunde, Projekt, Website, Blueprint, Angebot, Hosting, Zugänge |
 
@@ -82,14 +82,14 @@ scripts/
   verify.mjs            Prüflauf gegen einen nachgebauten Notion-Server
   lib/
     schema.mjs          die 9 Datenbanken, in fünf Durchläufen
-    views.mjs           die 51 Ansichten mit Filtern und Sortierungen
+    views.mjs           die 52 Ansichten mit Filtern und Sortierungen
     pages.mjs           Dashboard, Kundenakte, Projekt-, Blueprint- und Angebotsvorlage
     blocks.mjs          Notion-Blockbausteine
     notion.mjs          Client, Wiederholversuche, State, Fehler-Isolation
     seed.mjs            Beispieldaten
     env.mjs             liest .env, damit keine Umgebungsvariablen nötig sind
 widget/
-  index.html            Header: Logo, Analoguhr, Digitaluhr, Datum
+  index.html            Header: Logo, Analoguhr, Digitaluhr, Datum (Europe/Berlin)
   focus.html            Fokus-Timer, 25/5, über URL-Parameter anpassbar
   brand/                Logo, Emblem, Favicon, Ambiente-Cover, Marken-Schriften
 ```

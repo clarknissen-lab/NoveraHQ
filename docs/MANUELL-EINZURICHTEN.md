@@ -10,7 +10,7 @@ Ist sie erledigt, löschst du den Kasten.
 
 | # | Was | Warum nicht automatisch | Dauer |
 |---|---|---|---|
-| 1 | Verknüpfte Ansichten (11×) | Kein API-Blocktyp dafür | ~9 min |
+| 1 | Verknüpfte Ansichten (13×) | Kein API-Blocktyp dafür | ~11 min |
 | 2 | Datenbank-Vorlagen (5×) | API kann keine Vorlagen schreiben | ~14 min |
 | 3 | Novera-Care-Umsatz | ergibt sich aus Schritt 1 | ~2 min |
 | 4 | Seitenleiste sortieren | reine Anzeigeeinstellung | ~3 min |
@@ -41,23 +41,33 @@ nur, wo welche Ansicht erscheinen soll.
 > Immer eine **vorhandene Ansicht** wählen statt neu zu filtern. Änderst du
 > später den Filter in der Datenbank, ziehen alle Einbettungen mit.
 
-### Auf `NOVERA HQ`
+### Auf `NOVERA STUDIO` (dem Dashboard)
 
-| Abschnitt | Datenbank | Ansicht | Spalten |
-|---|---|---|---|
-| Heute · oben | Aufgaben | `Überfällig` | Aufgabe, Frist, Kunde |
-| Heute · Mitte | Aufgaben | `Heute` | Aufgabe, Uhrzeit, Kunde, Priorität |
-| Heute · unten | Leads | `Heute kontaktieren` | Unternehmen, Priorität, Sales Angle |
-| Sales · links | Leads | `Neue Leads` | Unternehmen, Lead Score, Branche |
-| Sales · rechts | Angebote | `Offen` | Angebotsname, Kunde, Gesamtpreis, Gültigkeit |
-| Projekte · oben | Projekte | `Aktiv` | Projektname, Kunde, Frist, Fortschrittsbalken, Offene Aufgaben |
-| Projekte · links | Projekte | `Kundenfeedback` | Projektname, Kunde |
-| Projekte · rechts | Websites | `Vor dem Launch` | Website, Kunde, Status |
-| Technik · oben | Hosting & Domains | `Domainverlängerungen` | Eintrag, Domain, Ablauf |
-| Technik · links | Hosting & Domains | `Aktive Hostings` | Eintrag, Domain, Hostinganbieter, Ablauf |
-| Technik · rechts | Kunden | `Novera Care` | Firmenname, Novera Care · Monatlich |
+Die Reihenfolge auf der Seite ist bewusst so gewählt: oben steht, was du morgens
+zuerst sehen willst.
 
-Bei den ersten drei lohnt **•••** → **Limit** → `5`.
+| Abschnitt | Datenbank | Ansicht | Spalten | Limit |
+|---|---|---|---|---|
+| Heute · Überfällig | Aufgaben | `Überfällig` | Aufgabe, Frist, Kunde | 5 |
+| Heute · Heutige Aufgaben | Aufgaben | `Heute` | Aufgabe, Uhrzeit, Kunde, Priorität | — |
+| Heute · Follow-ups | Leads | `Heute kontaktieren` | Unternehmen, Priorität, Sales Angle | 5 |
+| Heute · Dringende Projekte | Projekte | `Dringend` | Projektname, Kunde, Frist | 5 |
+| Aktive Projekte | Projekte | `Aktiv` | Projektname, Kunde, Frist, Fortschrittsbalken, Offene Aufgaben | 5 |
+| Sales · Neue Leads | Leads | `Neue Leads` | Unternehmen, Lead Score, Branche | 5 |
+| Sales · Offene Angebote | Angebote | `Offen` | Angebotsname, Kunde, Gesamtpreis, Gültigkeit | — |
+| Technik · Domainverlängerungen | Hosting & Domains | `Domainverlängerungen` | Eintrag, Domain, Ablauf | — |
+| Technik · Novera Care | Kunden | `Novera Care` | Firmenname, Novera Care · Monatlich | — |
+
+> **Limit setzen:** **•••** → **Limit** → `5`. Ohne Limit werden aus den Ansichten
+> lange Tabellen, und genau das soll das Dashboard nicht sein.
+
+### Auf `Kalender`
+
+| Abschnitt | Datenbank | Ansicht |
+|---|---|---|
+| Aufgaben mit Termin | Aufgaben | `Kalender` |
+| Projekt-Deadlines | Projekte | `Deadlines` |
+| Domainverlängerungen | Hosting & Domains | `Domainverlängerungen` |
 
 > Die Spalte **Frist** schreibt den Rest der Zeit aus: „Überfällig · 3 Tage",
 > „Heute", „Morgen", „in 5 Tagen". Sie ersetzt das rohe Datum — man sieht sofort,
@@ -165,7 +175,7 @@ Alle Seiten und Datenbanken hängen unter `NOVERA HQ`. Sinnvolle Reihenfolge per
 Drag & Drop:
 
 ```
-NOVERA HQ
+NOVERA STUDIO
 ├── Leads
 ├── Kunden
 ├── Projekte
@@ -175,18 +185,30 @@ NOVERA HQ
 ├── Aufgaben
 ├── Hosting & Domains
 ├── Zugänge
+├── Kalender
 ├── Novera Tools
 ├── Dokumente
 └── System
 ```
 
-`NOVERA HQ` mit **•••** → **Zu Favoriten hinzufügen** ganz nach oben holen.
+`NOVERA STUDIO` mit **•••** → **Zu Favoriten hinzufügen** ganz nach oben holen.
 
 ### Mobile
 
 Notion stapelt Spalten auf dem Telefon untereinander, in der Reihenfolge der
-Seite. Das HQ ist bereits danach gebaut: Kopf, Schnellzugriff, Heute, Sales,
-Projekte, Technik, Fokus.
+Seite. Das Dashboard ist danach gebaut:
+
+```
+Uhrzeit  →  Heute  →  Schnelle Aktionen  →  Mein Arbeitsbereich
+   →  Aktive Projekte  →  Quick Links  →  Spotify  →  Sales  →  Technik
+```
+
+Die acht Schnellaktionen stehen bewusst **nach** „Heute": auf dem Telefon würden
+acht gestapelte Karten den Heute-Bereich sonst unter die Falz drücken.
+
+**Spotify auf dem Telefon:** Der eingebettete Player ist auf kleinen Bildschirmen
+sperrig. Wenn er stört: **•••** → **Löschen** und stattdessen den Link
+„Zuletzt gehört" nutzen — der öffnet die Spotify-App direkt.
 
 Für unterwegs genügt meist die Datenbank **Aufgaben** mit der Ansicht `Heute` —
 die lässt sich einzeln favorisieren. In der App unter **Einstellungen** →

@@ -19,6 +19,7 @@
  *   NOVERA_SPOTIFY_URL      Spotify-Playlist
  *   NOVERA_GCAL_EMBED_URL   Google-Calendar-Einbettung
  *   NOVERA_DRIVE_URL        Drive-Hauptordner
+ *   NOVERA_GITHUB_URL       eigenes GitHub-Profil oder Repo für die Quick Links
  *   NOVERA_AMBIENT          "on" (Standard) oder "off" — Ambiente-Licht:
  *                           Cover auf dem HQ und violett getönte Sektionsbänder
  *
@@ -71,8 +72,11 @@ const URLS = {
     ? process.env.NOVERA_CLOCK_URL.replace(/\/?$/, "/") + "focus.html"
     : null,
   spotifyEmbed: process.env.NOVERA_SPOTIFY_URL || null,
+  // Derselbe Link, aber als Sprung in die Spotify-App statt als Einbettung.
+  spotify: process.env.NOVERA_SPOTIFY_URL || null,
   googleCalendarEmbed: process.env.NOVERA_GCAL_EMBED_URL || null,
   driveRoot: process.env.NOVERA_DRIVE_URL || null,
+  github: process.env.NOVERA_GITHUB_URL || null,
 
   // Ambiente-Cover liegt neben dem Widget.
   cover: process.env.NOVERA_CLOCK_URL
@@ -481,7 +485,7 @@ async function main() {
   log.step("Seitengerüst anlegen");
   const hq = await createPage("hq", {
     parent: PARENT ?? "dry",
-    title: "NOVERA HQ",
+    title: "NOVERA STUDIO",
     icon: "◆",
     iconUrl: URLS.logo,                          // Novera-Emblem in der Seitenleiste
     coverUrl: AMBIENT ? URLS.cover : null,       // Ambiente-Licht über dem Titel
@@ -502,6 +506,7 @@ async function main() {
   log.step("Bereichsseiten anlegen");
   const db = state.databases;
 
+  await createPage("kalender", { parent: hq, title: "Kalender", icon: "📅", blocks: P.kalenderBlocks(URLS) });
   await createPage("tools", { parent: hq, title: "Novera Tools", icon: "🔗", blocks: P.toolsBlocks() });
   await createPage("dokumente", { parent: hq, title: "Dokumente", icon: "📁", blocks: P.dokumenteBlocks(URLS) });
   await createPage("system", { parent: hq, title: "System", icon: "⚙️", blocks: P.systemBlocks({ db }) });

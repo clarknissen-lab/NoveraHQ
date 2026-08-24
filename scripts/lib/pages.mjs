@@ -54,185 +54,265 @@ export const NOVERA_AI = [
 /** Für die kompakte Navigationsspalte auf dem Dashboard. */
 export const NOVERA_TOOLS = [...GOOGLE_WORKSPACE, ...BUSINESS_TOOLS];
 
+/**
+ * Quick Links auf dem Dashboard (§21). Bewusst kurz gehalten — das ist die
+ * Liste, die man im Alltag anklickt, nicht die vollständige Werkzeugübersicht.
+ *
+ * Spotify und GitHub verweisen auf die Startseiten. Sobald du eine konkrete
+ * Playlist oder ein Repo willst, trägst du die Adresse in .env ein
+ * (NOVERA_SPOTIFY_URL, NOVERA_GITHUB_URL) — erfundene Links stehen hier keine.
+ */
+export const QUICK_LINKS = [
+  ["Gmail", "https://mail.google.com", "📧"],
+  ["Google Drive", "https://drive.google.com", "📁"],
+  ["Google Calendar", "https://calendar.google.com", "📅"],
+  ["Claude", "https://claude.ai", "🤖"],
+  ["Hostinger", "https://hpanel.hostinger.com", "🌐"],
+  ["1Password", "https://my.1password.com", "🔐"],
+  ["Papierkram", "https://www.papierkram.de", "💰"],
+  ["GitHub", "https://github.com", "💻"],
+  ["Spotify", "https://open.spotify.com", "🎵"],
+];
+
 /* ═══════════════════════════════════════════════════════════ DASHBOARD */
 
 export function hqBlocks({ db, pages, urls }) {
   const dbLink = (key) => (db[key] ? linkToDatabase(db[key].databaseId) : null);
   const pgLink = (key) => (pages[key] ? linkToPage(pages[key]) : null);
 
-  const schnellzugriff = (label, key) =>
+  /** Kleine Karte, die zur Datenbank führt. Dort legt „Neu" den Eintrag an. */
+  const aktion = (label, key) =>
     db[key]
-      ? callout(rtParts([[label, { bold: true }]]), "＋", "gray_background", [
+      ? callout(rtParts([[label, { bold: true }]]), "\uFF0B", "gray_background", [
           linkToDatabase(db[key].databaseId),
         ])
-      : callout(rtParts([[label, { bold: true }]]), "＋", "gray_background");
+      : callout(rtParts([[label, { bold: true }]]), "\uFF0B", "gray_background");
+
+  /** Kachel im Arbeitsbereich: Titel, kurze Erklärung, Sprung zur Datenbank. */
+  const kachel = (icon, label, was, key) =>
+    callout(
+      rtParts([[label, { bold: true }], [NL + was, { color: "gray" }]]),
+      icon,
+      "gray_background",
+      db[key] ? [linkToDatabase(db[key].databaseId)] : undefined
+    );
 
   return compact([
-    /* ── KOPF ───────────────────────────────────────────────────────── */
+    /* ── 1 · KOPF UND UHRZEIT ──────────────────────────────── §15, §16 ── */
     ...(urls.clock
-      ? [embed(urls.clock, "Novera Studio · Wochentag, Datum und Uhrzeit")]
+      ? [embed(urls.clock, "Novera Studio \u00B7 Wochentag, Datum und Uhrzeit (Europe/Berlin)")]
       : [
           h1("NOVERA STUDIO"),
           parts([["Business Command Center", { color: "gray" }]]),
           manualSlot(
-            "Kopfleiste fehlt noch",
+            "Kopfleiste mit Uhr fehlt noch",
             "Widget veröffentlichen, NOVERA_CLOCK_URL in .env setzen und neu bauen. " +
-              "Siehe docs/BRANDING.md."
+              "Die Uhr läuft dann live in Berliner Zeit. Siehe docs/BRANDING.md."
           ),
         ]),
 
-    /* ── SCHNELLZUGRIFF ─────────────────────────────────────────────── */
+    /* ── 2 · HEUTE ────────────────────────────────────────────────── §19 ── */
+    section("Heute"),
+
+    h3("Überfällig"),
+    manualSlot(
+      "Verknüpfte Ansicht: Aufgaben \u2192 Überfällig",
+      "/verknüpfte \u2192 Aufgaben \u2192 Ansicht „Überfällig“. Steht bewusst ganz oben."
+    ),
+
+    h3("Heutige Aufgaben"),
+    manualSlot(
+      "Verknüpfte Ansicht: Aufgaben \u2192 Heute",
+      "/verknüpfte \u2192 Aufgaben \u2192 Ansicht „Heute“. Spalten: Aufgabe, Uhrzeit, Kunde, Priorität."
+    ),
+
     columns([
-      [schnellzugriff("Neuer Lead", "leads")],
-      [schnellzugriff("Neue Aufgabe", "aufgaben")],
-      [schnellzugriff("Neues Angebot", "angebote")],
-      [schnellzugriff("Neuer Kunde", "kunden")],
+      [
+        h3("Follow-ups"),
+        manualSlot(
+          "Verknüpfte Ansicht: Leads \u2192 Heute kontaktieren",
+          "/verknüpfte \u2192 Leads \u2192 Ansicht „Heute kontaktieren“, Limit 5."
+        ),
+      ],
+      [
+        h3("Dringende Projekte"),
+        manualSlot(
+          "Verknüpfte Ansicht: Projekte \u2192 Dringend",
+          "/verknüpfte \u2192 Projekte \u2192 Ansicht „Dringend“. Deadline in dieser oder " +
+            "der nächsten Woche."
+        ),
+      ],
+    ]),
+
+    h3("Termine des Tages"),
+    urls.googleCalendarEmbed
+      ? embed(urls.googleCalendarEmbed, "Google Calendar \u00B7 Tagesansicht")
+      : manualSlot(
+          "Google-Calendar-Einbettung fehlt noch",
+          "Google Calendar \u2192 Einstellungen \u2192 Kalender integrieren \u2192 URL aus dem " +
+            "iframe kopieren, in .env bei NOVERA_GCAL_EMBED_URL eintragen und neu bauen. " +
+            "Mit &mode=AGENDA wird daraus eine ruhige Tagesliste."
+        ),
+
+    divider(),
+
+    /* ── 3 · SCHNELLE AKTIONEN ────────────────────────────────────── §18 ──
+     * Stehen bewusst NACH „Heute“: auf dem Telefon stapelt Notion die Spalten,
+     * und acht Karten davor würden den Heute-Bereich unter die Falz drücken.
+     */
+    columns([
+      [aktion("Neuer Lead", "leads")],
+      [aktion("Neuer Kunde", "kunden")],
+      [aktion("Neues Projekt", "projekte")],
+      [aktion("Neue Aufgabe", "aufgaben")],
+    ]),
+    columns([
+      [aktion("Neues Angebot", "angebote")],
+      [aktion("Neue Website", "websites")],
+      [aktion("Neuer Zugang", "zugaenge")],
+      [aktion("Neues Hosting", "hosting")],
     ]),
 
     divider(),
 
-    /* ── HEUTE ──────────────────────────────────────────────────────── */
-    section("Heute"),
+
+    /* ── 4 · MEIN ARBEITSBEREICH ──────────────────────────────────── §20 ── */
+    section("Mein Arbeitsbereich"),
+    parts([["Der tägliche Startpunkt. Jede Kachel führt direkt in den Bereich.", { color: "gray" }]]),
+    columns([
+      [kachel("\u2705", "Aufgaben", "Alles, was zu tun ist", "aufgaben")],
+      [kachel("\uD83C\uDFAF", "Follow-ups", "Leads, bei denen ein Kontakt fällig ist", "leads")],
+      [kachel("\uD83D\uDCE5", "Neue Leads", "Frisch gefunden, noch nicht bewertet", "leads")],
+    ]),
+    columns([
+      [kachel("\uD83D\uDE80", "Aktive Projekte", "Läuft gerade", "projekte")],
+      [kachel("\uD83D\uDC40", "Wartet auf Kunde", "Liegt beim Kunden", "projekte")],
+      [
+        pages.kalender
+          ? callout(
+              rtParts([["Kalender", { bold: true }], [NL + "Termine und Deadlines", { color: "gray" }]]),
+              "\uD83D\uDCC5",
+              "gray_background",
+              [linkToPage(pages.kalender)]
+            )
+          : callout(
+              rtParts([["Kalender", { bold: true }], [NL + "Termine und Deadlines", { color: "gray" }]]),
+              "\uD83D\uDCC5",
+              "gray_background"
+            ),
+      ],
+    ]),
+
+    divider(),
+
+    /* ── 5 · AKTIVE PROJEKTE ──────────────────────────────────────── §24 ── */
+    section("Aktive Projekte"),
     manualSlot(
-      "Verknüpfte Ansicht: Aufgaben → Überfällig",
-      "/verknüpfte → Aufgaben → Ansicht „Überfällig“. Steht bewusst oben: " +
-        "was überfällig ist, gehört zuerst gesehen."
-    ),
-    manualSlot(
-      "Verknüpfte Ansicht: Aufgaben → Heute",
-      "/verknüpfte → Aufgaben → Ansicht „Heute“. Spalten: Aufgabe, Uhrzeit, Kunde, Priorität."
-    ),
-    manualSlot(
-      "Verknüpfte Ansicht: Leads → Heute kontaktieren",
-      "/verknüpfte → Leads → Ansicht „Heute kontaktieren“. Die fälligen Follow-ups."
+      "Verknüpfte Ansicht: Projekte \u2192 Aktiv",
+      "/verknüpfte \u2192 Projekte \u2192 Ansicht „Aktiv“. Spalten: Projektname, Kunde, " +
+        "Frist, Fortschrittsbalken, Offene Aufgaben. Limit 5 \u2014 die vollständige Liste " +
+        "steht in der Datenbank."
     ),
 
     divider(),
 
-    /* ── SALES ──────────────────────────────────────────────────────── */
+    /* ── 6 · QUICK LINKS ──────────────────────────────────────────── §21 ── */
+    section("Quick Links"),
+    ...(() => {
+      // GitHub und Spotify zeigen auf die Startseiten, solange in .env nichts
+      // Konkretes steht. Erfundene Adressen kommen hier keine hinein.
+      const links = QUICK_LINKS.map(([label, url, icon]) => {
+        if (label === "GitHub" && urls.github) return [label, urls.github, icon];
+        if (label === "Spotify" && urls.spotify) return [label, urls.spotify, icon];
+        return [label, url, icon];
+      });
+      const spalte = (von, bis) =>
+        links.slice(von, bis).map(([label, url, icon]) => linkItem(`${icon} ${label}`, url));
+      return [columns([spalte(0, 3), spalte(3, 6), spalte(6)])];
+    })(),
+
+    divider(),
+
+    /* ── 7 · SPOTIFY UND FOKUS ────────────────────────────────────── §17 ── */
+    section("\uD83C\uDFB5 Spotify"),
+    columns([
+      [
+        urls.spotifyEmbed
+          ? embed(urls.spotifyEmbed, "Arbeitsplaylist")
+          : manualSlot(
+              "Arbeitsplaylist fehlt noch",
+              "In Spotify die Playlist öffnen \u2192 \u2022\u2022\u2022 \u2192 Teilen \u2192 Link kopieren, " +
+                "in .env bei NOVERA_SPOTIFY_URL eintragen und neu bauen."
+            ),
+        parts([
+          ["Der Player ist anfangs hoch. Einmal am unteren Rand nach oben ziehen macht " +
+           "ihn kompakt \u2014 dann bleibt er dauerhaft so.", { color: "gray", italic: true }],
+        ]),
+      ],
+      [
+        h3("Direkt starten"),
+        linkItem("\uD83C\uDFB5 Zuletzt gehört", "https://open.spotify.com"),
+        linkItem("\u2764\uFE0F Lieblingssongs", "https://open.spotify.com/collection/tracks"),
+        linkItem("\uD83D\uDD0D Playlist suchen", "https://open.spotify.com/search"),
+        h3("Fokus"),
+        urls.focus
+          ? embed(urls.focus, "25 Minuten Arbeit, 5 Minuten Pause")
+          : manualSlot("Fokus-Timer fehlt noch", "Entsteht mit NOVERA_CLOCK_URL automatisch."),
+      ],
+    ]),
+
+    divider(),
+
+    /* ── 8 · WEITER UNTEN: SALES, TECHNIK, NAVIGATION ─────────────── §22 ── */
     section("Sales"),
     columns([
       [
         h3("Neue Leads"),
         manualSlot(
-          "Verknüpfte Ansicht: Leads → Neue Leads",
-          "/verknüpfte → Leads → Ansicht „Neue Leads“, Limit 5."
+          "Verknüpfte Ansicht: Leads \u2192 Neue Leads",
+          "/verknüpfte \u2192 Leads \u2192 Ansicht „Neue Leads“, Limit 5."
         ),
       ],
       [
         h3("Offene Angebote"),
         manualSlot(
-          "Verknüpfte Ansicht: Angebote → Offen",
-          "/verknüpfte → Angebote → Ansicht „Offen“. Spalten: Angebotsname, Kunde, " +
+          "Verknüpfte Ansicht: Angebote \u2192 Offen",
+          "/verknüpfte \u2192 Angebote \u2192 Ansicht „Offen“. Spalten: Angebotsname, Kunde, " +
             "Gesamtpreis, Gültigkeit."
         ),
       ],
     ]),
-    columns([[dbLink("leads") ?? p("")], [dbLink("angebote") ?? p("")]]),
 
-    divider(),
-
-    /* ── PROJEKTE ───────────────────────────────────────────────────── */
-    section("Projekte"),
-    manualSlot(
-      "Verknüpfte Ansicht: Projekte → Aktiv",
-      "/verknüpfte → Projekte → Ansicht „Aktiv“. Spalten: Projektname, Kunde, " +
-        "Frist, Fortschrittsbalken, Offene Aufgaben."
-    ),
-    columns([
-      [
-        h3("Wartet auf Kunden"),
-        manualSlot(
-          "Verknüpfte Ansicht: Projekte → Kundenfeedback",
-          "/verknüpfte → Projekte → Ansicht „Kundenfeedback“."
-        ),
-      ],
-      [
-        h3("Vor dem Launch"),
-        manualSlot(
-          "Verknüpfte Ansicht: Websites → Vor dem Launch",
-          "/verknüpfte → Websites → Ansicht „Vor dem Launch“."
-        ),
-      ],
-    ]),
-    columns([[dbLink("projekte") ?? p("")], [dbLink("websites") ?? p("")]]),
-
-    divider(),
-
-    /* ── TECHNIK ────────────────────────────────────────────────────── */
     section("Technik"),
-    manualSlot(
-      "Verknüpfte Ansicht: Hosting & Domains → Domainverlängerungen",
-      "/verknüpfte → Hosting & Domains → Ansicht „Domainverlängerungen“. " +
-        "Steht hier, damit keine Domain unbemerkt abläuft."
-    ),
     columns([
       [
-        h3("Aktive Hostings"),
+        h3("Domainverlängerungen"),
         manualSlot(
-          "Verknüpfte Ansicht: Hosting & Domains → Aktive Hostings",
-          "/verknüpfte → Hosting & Domains → Ansicht „Aktive Hostings“. " +
-            "Spalten: Eintrag, Domain, Hostinganbieter, Ablauf."
+          "Verknüpfte Ansicht: Hosting & Domains \u2192 Domainverlängerungen",
+          "/verknüpfte \u2192 Hosting & Domains \u2192 Ansicht „Domainverlängerungen“."
         ),
       ],
       [
         h3("Novera Care"),
         manualSlot(
-          "Verknüpfte Ansicht: Kunden → Novera Care",
-          "/verknüpfte → Kunden → Ansicht „Novera Care“. Spalten: Firmenname, " +
-            "Novera Care · Monatlich."
+          "Verknüpfte Ansicht: Kunden \u2192 Novera Care",
+          "/verknüpfte \u2192 Kunden \u2192 Ansicht „Novera Care“. Spalten: Firmenname, " +
+            "Novera Care \u00B7 Monatlich."
         ),
       ],
     ]),
-    columns([
-      [dbLink("hosting") ?? p("")],
-      [dbLink("zugaenge") ?? p("")],
-    ]),
 
-    divider(),
-
-    /* ── FOKUS UND MUSIK ────────────────────────────────────────────── */
-    section("Fokus"),
+    section("Alle Bereiche"),
     columns([
       [
-        h3("Timer"),
-        urls.focus
-          ? embed(urls.focus, "25 Minuten Arbeit, 5 Minuten Pause")
-          : manualSlot(
-              "Fokus-Timer fehlt noch",
-              "Entsteht automatisch, sobald NOVERA_CLOCK_URL gesetzt ist."
-            ),
-      ],
-      [
-        h3("Musik"),
-        urls.spotifyEmbed
-          ? embed(urls.spotifyEmbed, "Arbeitsplaylist")
-          : manualSlot(
-              "Playlist fehlt noch",
-              "Spotify-Link kopieren, NOVERA_SPOTIFY_URL in .env setzen und neu bauen."
-            ),
-      ],
-    ]),
-
-    divider(),
-
-    /* ── NAVIGATION ─────────────────────────────────────────────────── */
-    section("Navigation"),
-    columns([
-      [
-        h3("Arbeitsbereiche"),
+        h3("Datenbanken"),
         dbLink("leads"), dbLink("kunden"), dbLink("projekte"), dbLink("websites"),
         dbLink("blueprints"), dbLink("angebote"), dbLink("aufgaben"),
         dbLink("hosting"), dbLink("zugaenge"),
       ].filter(Boolean),
       [
-        h3("Werkzeuge"),
-        ...NOVERA_TOOLS.map(([label, url, icon]) => linkItem(`${icon} ${label}`, url)),
-        pgLink("tools"),
-      ].filter(Boolean),
-      [
-        h3("System"),
-        pgLink("system"), pgLink("dokumente"),
+        h3("Seiten"),
+        pgLink("kalender"), pgLink("tools"), pgLink("dokumente"), pgLink("system"),
       ].filter(Boolean),
     ]),
 
@@ -642,6 +722,59 @@ export function toolsBlocks() {
       "gray_background"
     ),
   ];
+}
+
+export function kalenderBlocks(urls) {
+  return compact([
+    h1("Kalender"),
+    p("Google Calendar ist die Terminquelle. Notion führt bewusst keinen zweiten " +
+      "Kalender — sonst müsste jeder Termin zweimal gepflegt werden. Was Notion " +
+      "beisteuert, sind die Fristen, die nur hier stehen."),
+    divider(),
+
+    section("Termine"),
+    urls.googleCalendarEmbed
+      ? embed(urls.googleCalendarEmbed, "Google Calendar")
+      : manualSlot(
+          "Google-Calendar-Einbettung fehlt noch",
+          "Google Calendar → Einstellungen → den Kalender wählen → „Kalender integrieren“ → " +
+            "die Adresse aus dem src des iframes kopieren. In .env bei NOVERA_GCAL_EMBED_URL " +
+            "eintragen und neu bauen, oder hier mit /embed einfügen."
+        ),
+    bookmark("https://calendar.google.com", "📅 Google Calendar öffnen"),
+
+    section("Aufgaben mit Termin"),
+    manualSlot(
+      "Verknüpfte Ansicht: Aufgaben → Kalender",
+      "/verknüpfte → Aufgaben → Ansicht „Kalender“."
+    ),
+
+    section("Projekt-Deadlines"),
+    manualSlot(
+      "Verknüpfte Ansicht: Projekte → Deadlines",
+      "/verknüpfte → Projekte → Ansicht „Deadlines“."
+    ),
+
+    section("Domainverlängerungen"),
+    manualSlot(
+      "Verknüpfte Ansicht: Hosting & Domains → Domainverlängerungen",
+      "/verknüpfte → Hosting & Domains → Ansicht „Domainverlängerungen“."
+    ),
+
+    divider(),
+    callout(
+      "Für die Einbettung eignet sich die Agenda-Ansicht besser als das Monatsraster: " +
+        "an die Adresse &mode=AGENDA&showTitle=0&showPrint=0&showTabs=0 anhängen.",
+      "💡",
+      "gray_background"
+    ),
+    callout(
+      "Ein Geschäftskalender muss nicht öffentlich gestellt werden, damit du ihn siehst — " +
+        "solange du im selben Browser bei Google angemeldet bist, reicht das.",
+      "🔐",
+      "gray_background"
+    ),
+  ]);
 }
 
 export function dokumenteBlocks(urls) {

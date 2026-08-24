@@ -129,6 +129,20 @@ export const VIEWS = {
       description: "Konzeption → Design → Entwicklung → Feedback → Live.",
     },
     {
+      name: "Dringend",
+      type: "table",
+      filter: {
+        and: [
+          { property: "Status", status: { does_not_equal: "Abgeschlossen" } },
+          { property: "Status", status: { does_not_equal: "Live" } },
+          { property: "Status", status: { does_not_equal: "Pausiert" } },
+          { property: "Deadline", date: { before: "next_week" } },
+        ],
+      },
+      sorts: [{ property: "Deadline", direction: "ascending" }],
+      description: "Deadline innerhalb der nächsten Woche — oder schon vorbei.",
+    },
+    {
       name: "Kundenfeedback",
       type: "table",
       filter: {

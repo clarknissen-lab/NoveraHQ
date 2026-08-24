@@ -139,8 +139,8 @@ Dauert ein bis zwei Minuten. Der Lauf legt an:
 | Properties | 156 |
 | Relations (Paare) | 14 |
 | Rollups und Formeln | 22 |
-| Ansichten | 51 |
-| Seiten | 4 + Beispieldaten |
+| Ansichten | 52 |
+| Seiten | 5 + Beispieldaten |
 
 Am Ende steht eine Zusammenfassung und, falls etwas nicht durchging, eine Liste
 unter **Hinweise**. Der Builder bricht nicht beim ersten Problem ab.
@@ -177,8 +177,10 @@ Sprache und Zeitformat über die URL:
 
 | URL | Ergebnis |
 |---|---|
-| `…/?lang=de` | Deutsch, 24 Stunden |
+| `…/` | Deutsch, 24 Stunden, Zeitzone Europe/Berlin |
 | `…/?lang=en` | Englisch, 12 Stunden |
+| `…/?tz=local` | Zeitzone des Rechners statt Berlin |
+| `…/?tz=America/New_York` | eine andere Zeitzone |
 | `…/focus.html?work=50&break=10` | Timer mit 50/10 statt 25/5 |
 | `…/?ambient=off` | ohne Ambiente-Licht |
 

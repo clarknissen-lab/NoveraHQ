@@ -171,10 +171,16 @@ Sprache und Zeitformat steuerst du über die URL:
 
 | URL | Ergebnis |
 |---|---|
-| `…/` | Browsersprache, in Deutschland 24 Stunden |
+| `…/` | Deutsch, 24 Stunden, Zeitzone Europe/Berlin |
 | `…/?lang=de` | Deutsch, 24 Stunden |
 | `…/?lang=en` | Englisch, 12 Stunden |
 | `…/?lang=de&h12=1` | Deutsch, 12 Stunden |
+| `…/?tz=local` | Zeitzone des Rechners statt Berlin |
+| `…/?tz=America/New_York` | beliebige andere Zeitzone |
+
+Die Uhr läuft standardmäßig in **Europe/Berlin**, unabhängig davon, worauf der
+Rechner eingestellt ist. Eine unbekannte Zone fällt still auf die Systemzeit
+zurück, statt die Uhr stehen zu lassen.
 
 ---
 

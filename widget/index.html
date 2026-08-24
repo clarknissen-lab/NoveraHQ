@@ -318,6 +318,17 @@
   // Sprache über ?lang=de|en, sonst Browsersprache. Standard ist Deutsch
   // mit 24-Stunden-Anzeige; ?h12=1 schaltet auf 12 Stunden.
   var params = new URLSearchParams(location.search);
+
+  // Zeitzone. Standard Europe/Berlin — die Uhr zeigt damit immer deutsche Zeit,
+  // auch wenn der Rechner auf einer anderen Zone steht oder man unterwegs ist.
+  // ?tz=local nimmt die Systemzone, ?tz=America/New_York eine beliebige andere.
+  var TZ = params.get("tz") || "Europe/Berlin";
+  if (TZ === "local") TZ = undefined;
+  try {
+    new Intl.DateTimeFormat("de-DE", { timeZone: TZ }).format(new Date());
+  } catch (e) {
+    TZ = undefined;   // unbekannte Zone: lieber Systemzeit als gar keine Uhr
+  }
   // Ambiente-Licht. Standard an, mit ?ambient=off aus.
   if ((params.get("ambient") || "on") !== "off") {
     document.body.classList.add("ambient");
@@ -348,14 +359,38 @@
   var elWeekday = document.getElementById("weekday");
   var elDate    = document.getElementById("date");
 
-  var dayFmt  = new Intl.DateTimeFormat(locale, { weekday: "long" });
-  var dateFmt = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" });
+  var opts    = TZ ? { timeZone: TZ } : {};
+  var dayFmt  = new Intl.DateTimeFormat(locale, Object.assign({ weekday: "long" }, opts));
+  var dateFmt = new Intl.DateTimeFormat(locale,
+    Object.assign({ day: "numeric", month: "long", year: "numeric" }, opts));
+
+  // Stunde, Minute und Sekunde in der gewählten Zone. Date-Methoden wie
+  // getHours() liefern immer Systemzeit — deshalb der Umweg über formatToParts.
+  var teileFmt = new Intl.DateTimeFormat("de-DE", Object.assign({
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+  }, opts));
+
+  function zeitTeile(d) {
+    var teile = {};
+    teileFmt.formatToParts(d).forEach(function (t) {
+      if (t.type === "hour" || t.type === "minute" || t.type === "second") {
+        teile[t.type] = parseInt(t.value, 10);
+      }
+    });
+    // "24" statt "00" kommt bei hour12:false in manchen Browsern vor.
+    return {
+      h: (teile.hour || 0) % 24,
+      m: teile.minute || 0,
+      s: teile.second || 0,
+    };
+  }
 
   function pad(n) { return n < 10 ? "0" + n : String(n); }
 
   function render() {
     var now = new Date();
-    var h = now.getHours();
+    var t = zeitTeile(now);
+    var h = t.h;
     var suffix = "";
 
     if (hour12) {
@@ -364,17 +399,17 @@
     }
 
     elClock.innerHTML =
-      (hour12 ? h : pad(h)) + ":" + pad(now.getMinutes()) +
-      '<span class="sec">:' + pad(now.getSeconds()) + suffix + "</span>";
+      (hour12 ? h : pad(h)) + ":" + pad(t.m) +
+      '<span class="sec">:' + pad(t.s) + suffix + "</span>";
 
     elWeekday.textContent = dayFmt.format(now);
     elDate.textContent = dateFmt.format(now);
 
     // Zeiger. Stunde und Minute laufen weich mit, damit 10:30 nicht
     // aussieht, als stünde der Stundenzeiger exakt auf der 10.
-    var sec = now.getSeconds();
-    var min = now.getMinutes() + sec / 60;
-    var hr  = (now.getHours() % 12) + min / 60;
+    var sec = t.s;
+    var min = t.m + sec / 60;
+    var hr  = (t.h % 12) + min / 60;
 
     if (handHour)   handHour.setAttribute("transform",   "rotate(" + hr * 30  + " 50 50)");
     if (handMinute) handMinute.setAttribute("transform", "rotate(" + min * 6  + " 50 50)");
