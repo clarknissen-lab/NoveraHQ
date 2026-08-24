@@ -49,9 +49,20 @@
     --chrome-4: #AAB2BD;
 
     --karte:     linear-gradient(168deg, rgba(255,255,255,.045), rgba(255,255,255,0) 55%);
-    /* Ambiente-Licht. Gedämpftes Violett und Rosé, kein Neon. */
-    --amb-violet: rgba(122, 92, 255, .30);
-    --amb-rose:   rgba(255, 122, 184, .22);
+    /* Ambiente-Licht: Lila, Pink, Blau — weich und entsättigt, kein Neon.
+       Das Blau liegt im Periwinkle-Bereich, weil ein Blau mit Cyan-Anteil
+       gegen den dunklen Grund optisch ins Türkise kippt. */
+    --amb-lila: rgba(172, 155, 242, .52);
+    --amb-pink: rgba(244, 169, 218, .42);
+    --amb-blau: rgba(147, 169, 242, .38);
+
+    /* Dieselben Töne, stark abgeschwächt, für die Kartenfläche selbst.
+       Die Karte deckt fast den ganzen Ausschnitt ab — läge das Licht nur
+       außen herum, sähe man im Notion-Embed praktisch nichts davon.
+       Niedrig genug, dass der Text unangetastet bleibt. */
+    --amb-lila-in: rgba(172, 155, 242, .13);
+    --amb-pink-in: rgba(244, 169, 218, .10);
+    --amb-blau-in: rgba(147, 169, 242, .10);
   }
 
   /* Der Hellmodus der Marke dreht den Verlauf ins Graphit. */
@@ -75,8 +86,12 @@
       --chrome-3: #14171C;
       --chrome-4: #22262D;
       --karte:   linear-gradient(168deg, rgba(18,22,27,.028), rgba(18,22,27,0) 55%);
-      --amb-violet: rgba(122, 92, 255, .16);
-      --amb-rose:   rgba(255, 122, 184, .13);
+      --amb-lila: rgba(140, 122, 214, .22);
+      --amb-pink: rgba(214, 132, 182, .17);
+      --amb-blau: rgba(120, 142, 214, .17);
+      --amb-lila-in: rgba(140, 122, 214, .07);
+      --amb-pink-in: rgba(214, 132, 182, .06);
+      --amb-blau-in: rgba(120, 142, 214, .06);
     }
   }
 
@@ -93,21 +108,25 @@
     border-radius: 50%;
     pointer-events: none;
     z-index: 0;
-    filter: blur(70px);
+    filter: blur(52px);
     opacity: 0;
     transition: opacity .6s ease;
   }
   body.ambient::before {
     width: 62vw; height: 62vw;
     left: -14vw; top: -26vw;
-    background: radial-gradient(circle, var(--amb-violet), transparent 68%);
+    background: radial-gradient(circle, var(--amb-lila), transparent 68%);
     opacity: 1;
     animation: drift-a 54s ease-in-out infinite alternate;
   }
+  /* Zwei Wolken in einem Element: CSS erlaubt mehrere Hintergründe,
+     das spart ein zusätzliches Markup nur fürs Blau. */
   body.ambient::after {
-    width: 54vw; height: 54vw;
-    right: -12vw; bottom: -24vw;
-    background: radial-gradient(circle, var(--amb-rose), transparent 68%);
+    width: 74vw; height: 62vw;
+    right: -16vw; bottom: -26vw;
+    background:
+      radial-gradient(circle at 72% 30%, var(--amb-pink), transparent 62%),
+      radial-gradient(circle at 26% 78%, var(--amb-blau), transparent 64%);
     opacity: 1;
     animation: drift-b 68s ease-in-out infinite alternate;
   }
@@ -125,6 +144,16 @@
   @media (prefers-reduced-motion: reduce) {
     body.ambient::before,
     body.ambient::after { animation: none; }
+  }
+
+
+  /* Schimmer auf der Kartenfläche. Nur bei eingeschaltetem Ambiente —
+     ohne bleibt die Karte exakt so, wie sie vorher war. */
+  body.ambient .card::before {
+    background:
+      radial-gradient(56% 62% at 10%  0%,   var(--amb-lila-in), transparent 70%),
+      radial-gradient(52% 62% at 90%  8%,   var(--amb-pink-in), transparent 70%),
+      radial-gradient(64% 60% at 48% 100%,  var(--amb-blau-in), transparent 70%);
   }
 
   .card { z-index: 1; }

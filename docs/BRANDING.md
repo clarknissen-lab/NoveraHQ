@@ -50,10 +50,25 @@ einen orangen Akzent — der war geraten und ist raus.
 
 ## Ambiente-Licht
 
-Auf Wunsch liegt über dem monochromen Grundgerüst eine warme Lichtstimmung in
-Violett und Rosé. Sie ist bewusst als **Licht** gebaut, nicht als Farbanstrich:
-große Radien, niedrige Deckkraft, keine Flächen. Der Text bleibt überall auf
+Über dem monochromen Grundgerüst liegt eine weiche Lichtstimmung in **Lila,
+Pink und Blau**. Bewusst als **Licht** gebaut, nicht als Farbanstrich: große
+Radien, niedrige Deckkraft, keine Flächen. Der Text bleibt überall auf
 demselben dunklen Grund.
+
+```
+Lila    #AC9BF2      oben links
+Pink    #F4A9DA      oben rechts
+Blau    #93A9F2      unten, breit
+```
+
+**Warum das Blau nicht das Markenblau ist.** Der Novera-Schimmer `#96B4D7` hat
+einen Cyan-Anteil. Gegen den fast schwarzen Grund kippt der optisch ins Türkise —
+in der ersten Fassung sah der untere Rand grünlich aus. Das Blau liegt deshalb
+im Periwinkle-Bereich: bleibt eindeutig ein Blau und schlägt zugleich die Brücke
+zum Lila daneben.
+
+Ein warmer Ton, der in einer frühen Fassung unten im Cover lag, ist raus — Orange
+gehört nicht zu Novera.
 
 An drei Stellen:
 
@@ -61,7 +76,7 @@ An drei Stellen:
 |---|---|
 | HQ-Seite | Cover-Bild — Violett links, Rosé rechts, warmer Schimmer unten |
 | Sektionsbänder | `purple_background` statt `gray_background` |
-| Widgets | zwei große Lichtwolken hinter der Karte, langsam wandernd |
+| Widgets | drei Lichtwolken hinter der Karte, langsam wandernd, plus ein sehr feiner Schimmer auf der Karte selbst |
 
 Schalter in `.env`:
 
@@ -76,6 +91,19 @@ Zustand. In den Widgets steuert `?ambient=off` dasselbe.
 Das Licht in den Widgets wandert über 54 bzw. 68 Sekunden — langsam genug, dass
 es nicht auffällt, während man auf die Seite schaut. Wer im System
 Bewegungsreduzierung eingeschaltet hat, bekommt das Licht ohne Wandern.
+
+Ein Teil des Schimmers liegt zusätzlich **auf** der Karte, nicht nur darum
+herum. Grund: Im Notion-Embed füllt die Karte fast den ganzen Ausschnitt — läge
+das Licht nur außen, sähe man praktisch nichts davon. Die Deckkraft dort ist so
+niedrig gewählt, dass Text und Logo unangetastet bleiben.
+
+### Heller oder dunkler
+
+Alle Werte stehen als CSS-Variablen oben in `widget/index.html` und
+`widget/focus.html` (`--amb-lila`, `--amb-pink`, `--amb-blau` für außen,
+`--amb-*-in` für die Kartenfläche). Der letzte Wert in jedem `rgba()` ist die
+Deckkraft — hoch- oder runterdrehen, fertig. Für das Cover dieselben Töne in
+`widget/brand/cover.svg` unter `stop-opacity`.
 
 **Zur Einordnung:** Deine Marke ist monochrom, und die ursprüngliche Vorgabe
 lautete „dezente Akzentfarbe, nicht bunt". Das Ambiente ist deshalb ein Aufsatz

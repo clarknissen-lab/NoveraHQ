@@ -1,39 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 600" width="1500" height="600">
   <!--
-    Ambiente-Cover für die HQ-Seite.
-    Graphit als Grund, darüber drei weiche Lichtwolken in Violett, Rosé und einem
-    warmen Ton. Niedrige Deckkraft, große Radien: Es soll nach Licht im Raum
-    aussehen, nicht nach einem Farbverlauf.
+    Ambiente-Cover für das Dashboard.
+
+    Graphit als Grund — die Novera-Fläche bleibt unverändert. Darüber drei weiche
+    Lichtwolken: Lila, Pink und Blau.
+
+    Das Blau liegt bewusst im Periwinkle-Bereich (#9DB2E8) und nicht auf dem
+    reinen Markenblau #96B4D7: Gegen den fast schwarzen Grund kippt ein Blau mit
+    Cyan-Anteil optisch ins Türkise. Periwinkle bleibt ein Blau und schlägt
+    zugleich die Brücke zum Lila daneben.
+
+    Alle drei Töne sind entsättigt: große Radien, niedrige Deckkraft. Es soll nach
+    Licht im Raum aussehen, nicht nach einem Farbverlauf.
   -->
   <defs>
     <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"   stop-color="#0E1014"/>
-      <stop offset="55%"  stop-color="#0A0B0D"/>
-      <stop offset="100%" stop-color="#08090B"/>
+      <stop offset="0%"   stop-color="#12141C"/>
+      <stop offset="55%"  stop-color="#0D0E14"/>
+      <stop offset="100%" stop-color="#0A0B10"/>
     </linearGradient>
 
-    <radialGradient id="violet" cx="22%" cy="15%" r="62%">
-      <stop offset="0%"   stop-color="#7A5CFF" stop-opacity=".42"/>
-      <stop offset="45%"  stop-color="#6244D6" stop-opacity=".16"/>
-      <stop offset="100%" stop-color="#6244D6" stop-opacity="0"/>
+    <!-- Lila, oben links. Weicher als ein sattes Violett. -->
+    <radialGradient id="lila" cx="18%" cy="12%" r="64%">
+      <stop offset="0%"   stop-color="#AC9BF2" stop-opacity=".50"/>
+      <stop offset="42%"  stop-color="#8E7DDC" stop-opacity=".24"/>
+      <stop offset="100%" stop-color="#8B7BD0" stop-opacity="0"/>
     </radialGradient>
 
-    <radialGradient id="rose" cx="72%" cy="30%" r="55%">
-      <stop offset="0%"   stop-color="#FF7AB8" stop-opacity=".30"/>
-      <stop offset="45%"  stop-color="#D9558F" stop-opacity=".12"/>
-      <stop offset="100%" stop-color="#D9558F" stop-opacity="0"/>
+    <!-- Pink, rechts oben. Gedämpftes Rosé statt Magenta. -->
+    <radialGradient id="pink" cx="74%" cy="24%" r="56%">
+      <stop offset="0%"   stop-color="#F4A9DA" stop-opacity=".44"/>
+      <stop offset="45%"  stop-color="#DC8AC2" stop-opacity=".20"/>
+      <stop offset="100%" stop-color="#D488B8" stop-opacity="0"/>
     </radialGradient>
 
-    <radialGradient id="ember" cx="50%" cy="96%" r="52%">
-      <stop offset="0%"   stop-color="#FF9E6B" stop-opacity=".16"/>
-      <stop offset="60%"  stop-color="#C96A4A" stop-opacity=".05"/>
-      <stop offset="100%" stop-color="#C96A4A" stop-opacity="0"/>
+    <!-- Blau, unten breit. Der Novera-Schimmer #96B4D7. -->
+    <radialGradient id="blau" cx="46%" cy="98%" r="66%">
+      <stop offset="0%"   stop-color="#93A9F2" stop-opacity=".42"/>
+      <stop offset="45%"  stop-color="#7B8CE2" stop-opacity=".20"/>
+      <stop offset="100%" stop-color="#8592D6" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- Kühler Gegenpol, damit es nicht ins Süßliche kippt -->
-    <radialGradient id="cool" cx="92%" cy="82%" r="42%">
-      <stop offset="0%"   stop-color="#96B4D7" stop-opacity=".14"/>
-      <stop offset="100%" stop-color="#96B4D7" stop-opacity="0"/>
+    <!-- Zweites Blau rechts unten, damit die Ecke nicht abfällt. -->
+    <radialGradient id="blau2" cx="94%" cy="80%" r="40%">
+      <stop offset="0%"   stop-color="#96A6F0" stop-opacity=".24"/>
+      <stop offset="100%" stop-color="#9AA8E4" stop-opacity="0"/>
     </radialGradient>
 
     <!-- Feines Korn. Ohne das wirken große Verläufe auf Displays gebändert. -->
@@ -43,22 +54,22 @@
       <feComponentTransfer><feFuncA type="linear" slope="0.055"/></feComponentTransfer>
     </filter>
 
+    <!-- Lichtkante am unteren Rand, dort wo in Notion der Seitentitel sitzt. -->
     <linearGradient id="hairline" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0"/>
-      <stop offset="30%"  stop-color="#C9B8FF" stop-opacity=".22"/>
-      <stop offset="62%"  stop-color="#FFC2DF" stop-opacity=".18"/>
+      <stop offset="26%"  stop-color="#C4B6F0" stop-opacity=".20"/>
+      <stop offset="56%"  stop-color="#F0BEDA" stop-opacity=".18"/>
+      <stop offset="82%"  stop-color="#A8C4E4" stop-opacity=".18"/>
       <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
   </defs>
 
   <rect width="1500" height="600" fill="url(#base)"/>
-  <rect width="1500" height="600" fill="url(#violet)"/>
-  <rect width="1500" height="600" fill="url(#rose)"/>
-  <rect width="1500" height="600" fill="url(#ember)"/>
-  <rect width="1500" height="600" fill="url(#cool)"/>
+  <rect width="1500" height="600" fill="url(#lila)"/>
+  <rect width="1500" height="600" fill="url(#pink)"/>
+  <rect width="1500" height="600" fill="url(#blau)"/>
+  <rect width="1500" height="600" fill="url(#blau2)"/>
 
-  <!-- Lichtkante am unteren Rand, dort wo in Notion der Seitentitel sitzt -->
   <rect x="0" y="596" width="1500" height="1.5" fill="url(#hairline)"/>
-
   <rect width="1500" height="600" filter="url(#grain)" opacity=".9"/>
 </svg>
