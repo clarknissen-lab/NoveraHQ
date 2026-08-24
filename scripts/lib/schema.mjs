@@ -364,6 +364,9 @@ export const DATABASES = [
       "Preview-URL": url(),
       "Desktop Mockup": url(),
       "Mobile Mockup": url(),
+      // Link zum Markenordner in Google Drive. Die Vorgaben selbst
+      // (Farben, Typografie, Bildsprache) stehen im Blueprint.
+      Branding: url(),
       "SEO erledigt": checkbox(),
       Launchdatum: date(),
       "Letzte Aktualisierung": lastEdited(),
@@ -405,6 +408,10 @@ export const DATABASES = [
     },
     relations: {
       Website: relation("websites", "Blueprint"),
+      // Der Kunde steckt bereits über die Website drin. Die direkte Relation
+      // kostet beim Anlegen einen Klick und macht dafür den Blueprint in der
+      // Kundenakte unmittelbar filterbar — über die Website ginge das nicht.
+      Kunde: relation("kunden", "Blueprints"),
     },
   },
 
@@ -431,6 +438,8 @@ export const DATABASES = [
     relations: {
       Kunde: relation("kunden", "Angebote"),
       Projekt: relation("projekte", "Angebote"),
+      // Ein Angebot geht oft an einen Lead, bevor daraus ein Kunde wird.
+      Lead: relation("leads", "Angebot"),
     },
     formulas: {
       // Einmalige Posten. Novera Care läuft monatlich und zählt nicht hinein.
@@ -498,7 +507,8 @@ export const DATABASES = [
     name: "Hosting & Domains",
     icon: "☁️",
     description:
-      "Was wo läuft und wann es verlängert werden muss. Domainverlängerungen fallen hier auf, bevor sie ablaufen.",
+      "Was wo läuft und wann es verlängert werden muss. Domains dürfen bei ihrem " +
+      "bisherigen Anbieter bleiben — hier wird dokumentiert, nicht transferiert.",
     base: {
       Eintrag: title(),
       Hostinganbieter: select([
@@ -534,6 +544,10 @@ export const DATABASES = [
     relations: {
       Kunde: relation("kunden", "Hosting & Domains"),
       Website: relation("websites", "Hosting"),
+    },
+    rollups: {
+      // Wie bei Websites nur gespiegelt — gepflegt wird der Haken beim Kunden.
+      "Novera Care": rollup("Kunde", "Novera Care", "show_original"),
     },
     formulas: {
       "Tage bis Ablauf": formula(FX.tage("Ablaufdatum")),

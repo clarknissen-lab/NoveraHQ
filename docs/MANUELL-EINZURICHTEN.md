@@ -10,8 +10,8 @@ Ist sie erledigt, löschst du den Kasten.
 
 | # | Was | Warum nicht automatisch | Dauer |
 |---|---|---|---|
-| 1 | Verknüpfte Ansichten (10×) | Kein API-Blocktyp dafür | ~8 min |
-| 2 | Datenbank-Vorlagen (5×) | API kann keine Vorlagen schreiben | ~12 min |
+| 1 | Verknüpfte Ansichten (11×) | Kein API-Blocktyp dafür | ~9 min |
+| 2 | Datenbank-Vorlagen (5×) | API kann keine Vorlagen schreiben | ~14 min |
 | 3 | Novera-Care-Umsatz | ergibt sich aus Schritt 1 | ~2 min |
 | 4 | Seitenleiste sortieren | reine Anzeigeeinstellung | ~3 min |
 
@@ -53,7 +53,9 @@ nur, wo welche Ansicht erscheinen soll.
 | Projekte · oben | Projekte | `Aktiv` | Projektname, Kunde, Frist, Fortschrittsbalken, Offene Aufgaben |
 | Projekte · links | Projekte | `Kundenfeedback` | Projektname, Kunde |
 | Projekte · rechts | Websites | `Vor dem Launch` | Website, Kunde, Status |
-| Technik | Hosting & Domains | `Domainverlängerungen` | Eintrag, Domain, Ablauf |
+| Technik · oben | Hosting & Domains | `Domainverlängerungen` | Eintrag, Domain, Ablauf |
+| Technik · links | Hosting & Domains | `Aktive Hostings` | Eintrag, Domain, Hostinganbieter, Ablauf |
+| Technik · rechts | Kunden | `Novera Care` | Firmenname, Novera Care · Monatlich |
 
 Bei den ersten drei lohnt **•••** → **Limit** → `5`.
 
@@ -86,7 +88,7 @@ eine echte Vorlage.
 
 | Datenbank | Musterdatensatz | Vorlagenname | 🔧-Kästen |
 |---|---|---|---|
-| Kunden | Muster GmbH | `Kundenakte` | 6 |
+| Kunden | Muster GmbH | `Kundenakte` | 7 |
 | Projekte | Website Relaunch Muster GmbH | `Website-Projekt` | 1 |
 | Website Blueprints | Muster GmbH · Blueprint | `Blueprint` | 0 |
 | Angebote | Angebot Website Muster GmbH | `Angebot` | 0 |
@@ -104,16 +106,21 @@ Dann füllt sich jede neue Kundenakte automatisch mit den Daten genau dieses
 Kunden. Wählst du stattdessen einen konkreten Kunden aus, zeigen alle Akten
 dessen Daten.
 
-**Kundenakte — sechs Ansichten:**
+**Kundenakte — sieben Ansichten:**
 
 | Abschnitt | Datenbank | Filter |
 |---|---|---|
 | 🚀 Projekte | Projekte | `Kunde` enthält → **Diese Seite** |
 | 📄 Angebote | Angebote | `Kunde` enthält → **Diese Seite** |
-| 🌐 Website & Blueprint | Websites | `Kunde` enthält → **Diese Seite** |
+| 🌐 Websites | Websites | `Kunde` enthält → **Diese Seite** |
+| 🧠 Blueprints | Website Blueprints | `Kunde` enthält → **Diese Seite** |
 | ✅ Aufgaben | Aufgaben | `Kunde` enthält → **Diese Seite**, `Status` ist nicht `Erledigt` |
 | ☁️ Hosting & Domain | Hosting & Domains | `Kunde` enthält → **Diese Seite** |
 | 🔐 Zugänge | Zugänge | `Kunde` enthält → **Diese Seite** |
+
+Der Abschnitt **🎯 Herkunft** braucht keine Ansicht — der Lead steht oben in den
+Eigenschaften und ist von dort einen Klick entfernt. **🎨 Branding** ebenfalls
+nicht: Der Link zum Markenordner steht bei der Website, die Vorgaben im Blueprint.
 
 **Website-Projekt — eine Ansicht:**
 
@@ -169,7 +176,6 @@ NOVERA HQ
 ├── Hosting & Domains
 ├── Zugänge
 ├── Novera Tools
-├── Novera AI
 ├── Dokumente
 └── System
 ```

@@ -288,10 +288,19 @@ export const VIEWS = {
     },
     {
       name: "Nach Kunde",
-      type: "table",
+      type: "board",
+      groupByProperty: "Kunde",
+      groupByType: "relation",
       filter: OFFEN,
-      sorts: [{ property: "Deadline", direction: "ascending" }],
-      description: "Zum Gruppieren nach Kunde: ••• → Gruppieren → Kunde.",
+      description: "Eine Spalte je Kunde — offene Aufgaben auf einen Blick.",
+    },
+    {
+      name: "Nach Projekt",
+      type: "board",
+      groupByProperty: "Projekt",
+      groupByType: "relation",
+      filter: OFFEN,
+      description: "Eine Spalte je Projekt.",
     },
     {
       name: "Nach Status",
@@ -336,6 +345,13 @@ export const VIEWS = {
       type: "table",
       filter: { property: "SSL", checkbox: { equals: false } },
       description: "Muss vor dem Launch erledigt sein.",
+    },
+    {
+      name: "Nach Anbieter",
+      type: "board",
+      groupByProperty: "Hostinganbieter",
+      groupByType: "select",
+      description: "Zeigt, was wo liegt — Domains dürfen bei ihrem Anbieter bleiben.",
     },
     { name: "Alle Einträge", type: "table", sorts: [{ property: "Ablaufdatum", direction: "ascending" }] },
   ],
@@ -382,7 +398,11 @@ export function buildViewConfiguration(view, propertyIds) {
       const groupBy =
         view.groupByType === "status"
           ? { type: "status", property_id: propertyId, group_by: "group", sort: { type: "manual" } }
-          : { type: view.groupByType ?? "select", property_id: propertyId, sort: { type: "manual" } };
+          : view.groupByType === "relation"
+            // Notion bildet je verknüpftem Datensatz eine Spalte. Leere Gruppen
+            // ausblenden, sonst steht für jeden Kunden ohne Aufgabe eine leere da.
+            ? { type: "relation", property_id: propertyId, sort: { type: "ascending" }, hide_empty_groups: true }
+            : { type: view.groupByType ?? "select", property_id: propertyId, sort: { type: "manual" } };
       return { type: "board", group_by: groupBy, card_layout: "compact" };
     }
     case "calendar": {

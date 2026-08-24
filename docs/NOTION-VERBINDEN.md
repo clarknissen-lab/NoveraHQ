@@ -37,7 +37,7 @@ npm run check            # prüft Token, Seite und Schreibrecht
 npm run build
 ```
 
-Danach stehen 9 Datenbanken, 49 Ansichten und das komplette Dashboard.
+Danach stehen 9 Datenbanken, 51 Ansichten und das komplette Dashboard.
 
 > **Warum das nicht in dieser Claude-Sitzung läuft:** Diese Sitzung läuft in
 > einem abgeschotteten Container, dessen Netzwerkzugang auf eine Freigabeliste
@@ -77,7 +77,7 @@ Der Notion-Connector bringt Werkzeuge wie `search`, `fetch`, `create-pages`,
 Er arbeitet auf einer gröberen Ebene als die rohe API. Damit fehlt genau das,
 was dieses System ausmacht:
 
-- **Keine Ansichten.** Die 49 gefilterten Ansichten entstehen nicht.
+- **Keine Ansichten.** Die 51 gefilterten Ansichten entstehen nicht.
 - **Keine Relations mit benannter Gegenseite**, keine Rollups, keine Formeln.
   Ohne die gibt es keinen Projektfortschritt, keine Angebotssumme, keinen
   Frist-Countdown und kein gesperrtes Passwortfeld.

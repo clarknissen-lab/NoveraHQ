@@ -1,6 +1,6 @@
 # Datenmodell
 
-Neun Datenbanken. Definiert in `scripts/lib/schema.mjs`.
+Neun Datenbanken, 156 Properties. Definiert in `scripts/lib/schema.mjs`.
 
 Der Grundsatz: **so einfach wie möglich, so umfangreich wie nötig.** Was sich
 über eine Relation abbilden lässt, bekommt keine eigene Datenbank.
@@ -19,7 +19,7 @@ LEAD ──gewonnen──▶ KUNDE ──▶ PROJEKT ──▶ WEBSITE ──▶
                      └──▶ ZUGÄNGE
 ```
 
-Zwölf Relationspaare, jedes genau einmal deklariert:
+Vierzehn Relationspaare, jedes genau einmal deklariert:
 
 ```
 Kunden       → Leads          Lead ↔ Kunde
@@ -27,14 +27,29 @@ Projekte     → Kunden         Kunde ↔ Projekte
 Websites     → Kunden         Kunde ↔ Websites
 Websites     → Projekte       Projekt ↔ Websites
 Blueprints   → Websites       Website ↔ Blueprint
+Blueprints   → Kunden         Kunde ↔ Blueprints
 Angebote     → Kunden         Kunde ↔ Angebote
 Angebote     → Projekte       Projekt ↔ Angebote
+Angebote     → Leads          Lead ↔ Angebot
 Aufgaben     → Kunden         Kunde ↔ Aufgaben
 Aufgaben     → Projekte       Projekt ↔ Aufgaben
 Hosting      → Kunden         Kunde ↔ Hosting & Domains
 Hosting      → Websites       Website ↔ Hosting
 Zugänge      → Kunden         Kunde ↔ Zugänge
 ```
+
+### Zwei Relations, die auf den ersten Blick doppelt wirken
+
+**Blueprint → Kunde.** Der Kunde steckt bereits über die Website drin. Die
+direkte Relation kostet beim Anlegen einen Klick — und macht dafür den Blueprint
+in der Kundenakte unmittelbar filterbar. Über die Website ginge das nicht: Notion
+kann in einer Vorlage nur auf eine direkte Relation mit „Diese Seite" filtern,
+nicht über zwei Ecken. Wer den Klick sparen will, löscht die Relation in
+`schema.mjs` und erreicht den Blueprint stattdessen über die Website.
+
+**Angebot → Lead.** Ein Angebot geht oft an einen Lead, bevor daraus ein Kunde
+wird. Ohne diese Relation hinge ein verschicktes Angebot in der Luft, solange
+der Kunde noch nicht angelegt ist.
 
 ---
 
@@ -139,6 +154,17 @@ slice("●●●●●●●●●●", 0, round(prop("Fortschritt") * 10)) + �
 Punktreihe statt Blockbalken — im Dunkelmodus deutlich ruhiger. Läuft als Text
 und funktioniert deshalb überall, auch in Board-Karten und auf dem Telefon.
 
+### Gespiegelte Felder statt doppelter Pflege
+
+`Websites → Novera Care` und `Hosting & Domains → Novera Care` sind **Rollups**
+auf den Haken beim Kunden, keine eigenen Felder. Gepflegt wird an genau einer
+Stelle: in der Kundenakte. Beide Rollups nutzen `show_original` und zeigen damit
+den Haken selbst statt einer Zahl.
+
+Dasselbe Prinzip beim Branding: Der Link zum Markenordner steht bei der Website
+(`Branding`), die inhaltlichen Vorgaben — Logo, Farben, Typografie, Bildsprache —
+stehen im Blueprint, wo sie beim Bauen gebraucht werden. Keine dritte Stelle.
+
 ### `Zugänge → Passwort`
 ```
 "🔐 In 1Password"
@@ -164,14 +190,14 @@ Namen möchte, ändert die Optionslisten oben in `schema.mjs`.
 
 | Datenbank | Properties | davon Relations | davon berechnet |
 |---|---|---|---|
-| Leads | 19 | 1 | 1 |
-| Kunden | 25 | 7 | 2 |
-| Projekte | 19 | 6 | 5 |
-| Websites | 15 | 3 | 1 |
-| Website Blueprints | 10 | 1 | — |
-| Angebote | 17 | 2 | 3 |
+| Leads | 21 | 2 | 1 |
+| Kunden | 27 | 8 | 2 |
+| Projekte | 18 | 4 | 5 |
+| Websites | 16 | 4 | 1 |
+| Website Blueprints | 11 | 2 | — |
+| Angebote | 18 | 3 | 3 |
 | Aufgaben | 16 | 2 | 5 |
-| Hosting & Domains | 17 | 2 | 3 |
+| Hosting & Domains | 18 | 2 | 4 |
 | Zugänge | 11 | 1 | 1 |
 
 Relations umfassen die automatisch entstandenen Gegenseiten — deshalb hat

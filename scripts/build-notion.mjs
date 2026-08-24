@@ -503,7 +503,6 @@ async function main() {
   const db = state.databases;
 
   await createPage("tools", { parent: hq, title: "Novera Tools", icon: "🔗", blocks: P.toolsBlocks() });
-  await createPage("ai", { parent: hq, title: "Novera AI", icon: "🤖", blocks: P.aiBlocks() });
   await createPage("dokumente", { parent: hq, title: "Dokumente", icon: "📁", blocks: P.dokumenteBlocks(URLS) });
   await createPage("system", { parent: hq, title: "System", icon: "⚙️", blocks: P.systemBlocks({ db }) });
 

@@ -338,6 +338,8 @@ server.listen(0, "127.0.0.1", () => {
       ["Projekt ↔ Angebote", has("Projekte", "Angebote") && has("Angebote", "Projekt")],
       ["Website ↔ Blueprint", has("Websites", "Blueprint") && has("Website Blueprints", "Website")],
       ["Website ↔ Hosting", has("Websites", "Hosting") && has("Hosting & Domains", "Website")],
+      ["Kunde ↔ Blueprints", has("Kunden", "Blueprints") && has("Website Blueprints", "Kunde")],
+      ["Lead ↔ Angebot", has("Leads", "Angebot") && has("Angebote", "Lead")],
 
       // Rechnende Felder
       ["Projektfortschritt rechnet", has("Projekte", "Fortschritt")],
@@ -351,8 +353,29 @@ server.listen(0, "127.0.0.1", () => {
       ["Passwortfeld ist eine feste Formel", propType("Zugänge", "Passwort") === "formula"],
       ["Keine Finanzdatenbank in Notion", !ds("Rechnungen") && !ds("Invoices") && !ds("Ausgaben")],
       ["Neun Datenbanken, nicht mehr", Object.keys(store.dataSources).length === 9],
+      ["Branding-Link bei der Website", has("Websites", "Branding")],
+      ["Novera Care bei Hosting gespiegelt", has("Hosting & Domains", "Novera Care")],
       ["Beispieldaten sind tatsächlich verknüpft", linkedRecords() >= 14],
     ];
+
+    /* Die Abschlussprüfung aus dem Audit: der komplette Weg eines Kunden.
+       Jeder Pfeil muss über eine echte Relation laufen — sonst reißt die Kette
+       genau dort, wo man sie im Alltag braucht. */
+    const kette = [
+      ["Lead", "Angebot", "Leads", "Angebot"],
+      ["Angebot", "Kunde", "Angebote", "Kunde"],
+      ["Kunde", "Projekt", "Kunden", "Projekte"],
+      ["Projekt", "Website", "Projekte", "Websites"],
+      ["Website", "Blueprint", "Websites", "Blueprint"],
+      ["Projekt", "Aufgaben", "Projekte", "Aufgaben"],
+      ["Website", "Hosting", "Websites", "Hosting"],
+      ["Kunde", "Zugänge", "Kunden", "Zugänge"],
+    ];
+    const ketteOk = kette.every(([, , db, prop]) => has(db, prop));
+    checks.push([
+      "Kette Lead → Angebot → Kunde → Projekt → Website → Blueprint → Hosting",
+      ketteOk,
+    ]);
     for (const [label, ok] of checks) {
       console.log(`    ${ok ? "\x1b[32m✓\x1b[0m" : "\x1b[31m✗\x1b[0m"} ${label}`);
       if (!ok) problems.push(`Prüfung fehlgeschlagen: ${label}`);

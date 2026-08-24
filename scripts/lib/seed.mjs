@@ -123,6 +123,7 @@ export const SEED = {
       Status: { status: "Entwicklung" },
       Domain: { rich_text: "muster-beispiel.de" },
       "Preview-URL": { url: "https://preview.example.com" },
+      Branding: { url: "https://drive.google.com/drive/folders/beispiel-branding" },
       "SEO erledigt": { checkbox: false },
       Kunde: { relation: "kunden:muster" },
       Projekt: { relation: "projekte:relaunch" },
@@ -138,6 +139,7 @@ export const SEED = {
       Kundenfreigabe: { checkbox: true },
       Freigabedatum: { date: tag(-9) },
       Website: { relation: "websites:musterweb" },
+      Kunde: { relation: "kunden:muster" },
       Notizen: { rich_text: "Freigegeben nach zwei Änderungsrunden. Danach wurde gebaut." },
     },
   ],
@@ -157,6 +159,7 @@ export const SEED = {
       Status: { status: "Angenommen" },
       Kunde: { relation: "kunden:muster" },
       Projekt: { relation: "projekte:relaunch" },
+      Lead: { relation: "leads:gewonnen" },
     },
     {
       Angebotsname: { title: "Angebot Website Beispiel Bäckerei" },
@@ -169,7 +172,8 @@ export const SEED = {
       "Versendet am": { date: tag(-3) },
       "Gültig bis": { date: tag(11) },
       Status: { status: "Versendet" },
-      Notizen: { rich_text: "Noch keine Rückmeldung — steht in „Angebote offen“." },
+      Lead: { relation: "leads:offen" },
+      Notizen: { rich_text: "Angebot an einen Lead, noch kein Kunde — genau dafür ist die Lead-Relation da." },
     },
   ],
 

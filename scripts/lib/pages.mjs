@@ -18,19 +18,41 @@ import { rtParts } from "./notion.mjs";
 
 const compact = (arr) => arr.filter(Boolean);
 
+/** Zeilenumbruch innerhalb eines Rich-Text-Segments. */
+const NL = "\n";
+
 /* ────────────────────────────────────────────────────────── Werkzeuge */
 
-export const NOVERA_TOOLS = [
+export const GOOGLE_WORKSPACE = [
   ["Gmail", "https://mail.google.com", "📧", "Kundenkommunikation"],
   ["Google Drive", "https://drive.google.com", "📁", "Dateiablage — der eigentliche Speicher"],
   ["Google Calendar", "https://calendar.google.com", "📅", "Termine"],
   ["Google Docs", "https://docs.google.com", "📝", "Angebote, Briefings"],
   ["Google Sheets", "https://sheets.google.com", "📊", "Listen, Kalkulationen"],
-  ["Claude", "https://claude.ai", "🤖", "Texte, Struktur, Entwicklung"],
-  ["Hostinger", "https://hpanel.hostinger.com", "☁️", "Hosting und Domains"],
-  ["1Password", "https://my.1password.com", "🔐", "Alle Passwörter"],
-  ["Papierkram", "https://www.papierkram.de", "🧾", "Buchhaltung und Rechnungen"],
 ];
+
+export const BUSINESS_TOOLS = [
+  ["Hostinger", "https://hpanel.hostinger.com", "☁️", "Hosting und Domains"],
+  ["1Password", "https://my.1password.com", "🔐", "Alle Passwörter und Zugangsdaten"],
+  ["Papierkram", "https://www.papierkram.de", "🧾", "Buchhaltung, Rechnungen, Belege"],
+];
+
+/**
+ * Claude-Projekte je Arbeitsbereich. Ein Projekt je Aufgabe hält den Kontext
+ * sauber, statt alles in einer langen Unterhaltung zu vermischen.
+ *
+ * Die Adressen entstehen erst beim Anlegen in Claude — deshalb steht hier
+ * bewusst kein erfundener Link, sondern ein Platzhalter.
+ */
+export const NOVERA_AI = [
+  ["Claude · Master", "Systemaufbau, Struktur, übergreifende Fragen"],
+  ["Claude · Sales", "Ansprache, Follow-ups, Einwandbehandlung"],
+  ["Claude · Angebote", "Angebotstexte, Leistungsbeschreibungen, Preisgespräche"],
+  ["Claude · Websites", "Blueprints, Texte, Code, SEO"],
+];
+
+/** Für die kompakte Navigationsspalte auf dem Dashboard. */
+export const NOVERA_TOOLS = [...GOOGLE_WORKSPACE, ...BUSINESS_TOOLS];
 
 /* ═══════════════════════════════════════════════════════════ DASHBOARD */
 
@@ -145,6 +167,24 @@ export function hqBlocks({ db, pages, urls }) {
         "Steht hier, damit keine Domain unbemerkt abläuft."
     ),
     columns([
+      [
+        h3("Aktive Hostings"),
+        manualSlot(
+          "Verknüpfte Ansicht: Hosting & Domains → Aktive Hostings",
+          "/verknüpfte → Hosting & Domains → Ansicht „Aktive Hostings“. " +
+            "Spalten: Eintrag, Domain, Hostinganbieter, Ablauf."
+        ),
+      ],
+      [
+        h3("Novera Care"),
+        manualSlot(
+          "Verknüpfte Ansicht: Kunden → Novera Care",
+          "/verknüpfte → Kunden → Ansicht „Novera Care“. Spalten: Firmenname, " +
+            "Novera Care · Monatlich."
+        ),
+      ],
+    ]),
+    columns([
       [dbLink("hosting") ?? p("")],
       [dbLink("zugaenge") ?? p("")],
     ]),
@@ -192,7 +232,7 @@ export function hqBlocks({ db, pages, urls }) {
       ].filter(Boolean),
       [
         h3("System"),
-        pgLink("system"), pgLink("ai"), pgLink("dokumente"),
+        pgLink("system"), pgLink("dokumente"),
       ].filter(Boolean),
     ]),
 
@@ -231,6 +271,11 @@ export function kundenakteBlocks() {
       "gray_background"
     ),
 
+    section("🎯 Herkunft"),
+    p("Aus welchem Lead dieser Kunde entstanden ist — steht oben in der " +
+      "Eigenschaft „Lead“. Von dort aus sind Sales Angle und Gesprächsverlauf " +
+      "einen Klick entfernt."),
+
     section("🚀 Projekte"),
     manualSlot(
       "Verknüpfte Ansicht: Projekte, gefiltert auf diesen Kunden",
@@ -244,12 +289,24 @@ export function kundenakteBlocks() {
         "Summenzeile bei Gesamtpreis auf Summe stellen."
     ),
 
-    section("🌐 Website & Blueprint"),
+    section("🌐 Websites"),
     manualSlot(
       "Verknüpfte Ansicht: Websites, gefiltert auf diesen Kunden",
       "/verknüpfte → Websites → Filter: Kunde enthält → „Diese Seite“. " +
-        "Der Blueprint hängt an der Website und ist von dort aus einen Klick entfernt."
+        "Spalten: Website, Status, Domain, Live-URL, Branding."
     ),
+
+    section("🧠 Blueprints"),
+    manualSlot(
+      "Verknüpfte Ansicht: Website Blueprints, gefiltert auf diesen Kunden",
+      "/verknüpfte → Website Blueprints → Filter: Kunde enthält → „Diese Seite“. " +
+        "Spalten: Blueprint, Version, Status, Kundenfreigabe."
+    ),
+
+    section("🎨 Branding"),
+    p("Der Link zum Markenordner steht bei der Website in der Eigenschaft " +
+      "„Branding“. Die Vorgaben selbst — Logo, Farben, Typografie, Bildsprache — " +
+      "stehen im Blueprint, wo sie beim Bauen gebraucht werden."),
 
     section("✅ Aufgaben"),
     manualSlot(
@@ -544,48 +601,46 @@ export function leadBlocks() {
 export function toolsBlocks() {
   return [
     h1("Novera Tools"),
-    p("Alles, was außerhalb von Notion läuft."),
+    p("Alles, was außerhalb von Notion läuft — in drei Gruppen nach Zuständigkeit."),
     divider(),
-    ...NOVERA_TOOLS.flatMap(([label, url, icon, note]) => [
+
+    section("Google Workspace"),
+    p("E-Mail, Dateien, Kalender und Dokumente. Notion verwaltet davon nichts, es verlinkt nur."),
+    ...GOOGLE_WORKSPACE.flatMap(([label, url, icon, note]) => [
       bookmark(url, `${icon} ${label}`),
       parts([[note, { color: "gray" }]]),
     ]),
+
+    section("Novera AI"),
+    p("Ein Claude-Projekt je Arbeitsbereich. Das hält den Kontext sauber, statt " +
+      "alles in einer langen Unterhaltung zu vermischen."),
+    ...NOVERA_AI.map(([name, zweck]) =>
+      callout(
+        rtParts([
+          [name, { bold: true }],
+          [NL + zweck, { color: "gray" }],
+          [NL + "Link eintragen, sobald das Projekt in Claude angelegt ist.", { color: "gray", italic: true }],
+        ]),
+        "\u{1F916}",
+        "gray_background"
+      )
+    ),
+    bookmark("https://claude.ai", "\u{1F916} Claude öffnen"),
+
+    section("Business"),
+    p("Die drei Systeme, die Notion bewusst nicht ersetzt."),
+    ...BUSINESS_TOOLS.flatMap(([label, url, icon, note]) => [
+      bookmark(url, `${icon} ${label}`),
+      parts([[note, { color: "gray" }]]),
+    ]),
+
     divider(),
     callout(
       "Damit die Links immer im richtigen Konto landen: in Chrome ein eigenes Profil " +
         "für Novera Studio anlegen und Notion darin öffnen.",
-      "💡",
+      "\u{1F4A1}",
       "gray_background"
     ),
-  ];
-}
-
-export function aiBlocks() {
-  return [
-    h1("Novera AI"),
-    p("Vorbereitete Claude-Projekte je Arbeitsbereich. Ein Projekt je Aufgabe hält den " +
-      "Kontext sauber — statt alles in einer langen Unterhaltung zu vermischen."),
-    divider(),
-
-    ...[
-      ["Novera Studio · Master", "Systemaufbau, Struktur, übergreifende Fragen"],
-      ["Novera Studio · Sales", "Ansprache, Follow-ups, Einwandbehandlung"],
-      ["Novera Studio · Angebote", "Angebotstexte, Leistungsbeschreibungen, Preisgespräche"],
-      ["Novera Studio · Websites", "Blueprints, Texte, Code, SEO"],
-    ].flatMap(([name, zweck]) => [
-      callout(
-        rtParts([
-          [name, { bold: true }],
-          ["\n" + zweck, { color: "gray" }],
-          ["\nLink eintragen, sobald das Projekt in Claude angelegt ist.", { color: "gray", italic: true }],
-        ]),
-        "🤖",
-        "gray_background"
-      ),
-    ]),
-
-    divider(),
-    bookmark("https://claude.ai", "🤖 Claude öffnen"),
   ];
 }
 

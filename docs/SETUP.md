@@ -136,11 +136,11 @@ Dauert ein bis zwei Minuten. Der Lauf legt an:
 | Was | Menge |
 |---|---|
 | Datenbanken | 9 |
-| Properties | 150 |
-| Relations (Paare) | 12 |
-| Rollups und Formeln | 21 |
-| Ansichten | 49 |
-| Seiten | 5 + Beispieldaten |
+| Properties | 156 |
+| Relations (Paare) | 14 |
+| Rollups und Formeln | 22 |
+| Ansichten | 51 |
+| Seiten | 4 + Beispieldaten |
 
 Am Ende steht eine Zusammenfassung und, falls etwas nicht durchging, eine Liste
 unter **Hinweise**. Der Builder bricht nicht beim ersten Problem ab.
