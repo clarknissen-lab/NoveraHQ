@@ -17,16 +17,47 @@ Insgesamt etwa 35 Minuten.
 
 ## 1 — In Notion: Integration anlegen
 
-1. [notion.so/my-integrations](https://www.notion.so/my-integrations) öffnen
-2. **New integration**
-3. Name: `Novera Builder`, Associated workspace: dein Workspace, Type: **Internal**
-4. **Save**
-5. **Configure** → **Internal Integration Secret** → **Show** → kopieren
+Die Seite für Integrationen ist eine **Entwicklerseite**. Sie liegt außerhalb
+deines Workspaces, ist auch bei deutscher Notion-Oberfläche **auf Englisch**,
+und sie lässt sich nicht über die Notion-Suche finden.
+
+**Der zuverlässige Weg:** Diese Adresse in die Adresszeile eines Browsers
+eingeben — nicht in die Notion-Suche, nicht in die Notion-App:
+
+```
+https://www.notion.so/my-integrations
+```
+
+> **Wichtig:** Im Browser, nicht in der Notion-App. Die Desktop-App öffnet
+> Entwicklerseiten nicht zuverlässig. Chrome, Safari oder Firefox verwenden.
+
+Alternativ über die Oberfläche:
+**Einstellungen** (*Settings*) → **Verbindungen** (*Connections*) → ganz unten
+**Integrationen entwickeln oder verwalten** (*Develop or manage integrations*).
+
+### Auf der Seite
+
+Die Beschriftungen sind englisch, auch wenn dein Notion deutsch ist:
+
+1. **New integration**
+2. **Name**: `Novera Builder`
+3. **Associated workspace**: deinen Novera-Workspace wählen
+4. **Type**: **Internal**
+5. **Save**
+6. Danach **Configure** → bei **Internal Integration Secret** auf **Show** →
+   den Wert kopieren
 
 Das Secret beginnt mit `ntn_`. Es ist ein Passwort — behandle es wie eins.
 
-Unter **Capabilities** müssen **Read**, **Update** und **Insert content** aktiv
-sein. Ohne *Insert content* kann der Builder nichts anlegen.
+### Berechtigungen prüfen
+
+Auf derselben Seite unter **Capabilities** müssen aktiv sein:
+
+- **Read content**
+- **Update content**
+- **Insert content**
+
+Ohne *Insert content* kann der Builder nichts anlegen.
 
 ---
 
@@ -37,8 +68,13 @@ Seiten, die ausdrücklich für sie freigegeben wurden.
 
 1. Eine neue leere Seite anlegen, z.B. `Novera`
 2. Oben rechts auf **•••**
-3. **Connections** (Verbindungen) → **Connect to** → `Novera Builder`
-4. **•••** → **Copy link** → die Adresse kopieren
+3. **Verbindungen** (*Connections*) → **Verbindung hinzufügen** (*Connect to*)
+4. `Novera Builder` auswählen
+5. **•••** → **Link kopieren** (*Copy link*) → die Adresse kopieren
+
+> Findest du **Verbindungen** im •••-Menü nicht, scroll darin nach unten — der
+> Punkt sitzt je nach Notion-Version weiter unten oder heißt in älteren
+> Fassungen noch **Hinzufügen von Verbindungen**.
 
 ---
 
@@ -161,6 +197,7 @@ Klick auf den roten Lauf und lies den fehlgeschlagenen Schritt.
 | `Notion weist das Token zurück` | Secret falsch kopiert | Schritt 1.5, dann Secret aktualisieren |
 | `Die Integration darf nicht schreiben` | *Insert content* fehlt | Capabilities, Schritt 1 |
 | Uhr fehlt im Dashboard | Pages noch nicht veröffentlicht | Schritt 4, dann erneut bauen |
+| „my-integrations" nicht auffindbar | in der Notion-Suche gesucht statt im Browser | Adresse in die Adresszeile eines Browsers eingeben |
 
 ---
 

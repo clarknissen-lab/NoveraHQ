@@ -54,31 +54,64 @@ Ordner wechseln (`cd` und den Ordner ins Fenster ziehen), dann `npm install`.
 
 ## 3 — Integration in Notion anlegen
 
-1. [notion.so/my-integrations](https://www.notion.so/my-integrations) öffnen
-2. **New integration**
-3. Name: `Novera Builder`
-4. Associated workspace: dein Novera-Workspace
-5. Type: **Internal**
-6. **Save**
-7. **Configure** → **Internal Integration Secret** → **Show** → kopieren
+Die Seite für Integrationen ist eine **Entwicklerseite**. Sie liegt außerhalb
+deines Workspaces, ist auch bei deutscher Notion-Oberfläche **auf Englisch**,
+und sie lässt sich nicht über die Notion-Suche finden.
 
-Das Secret beginnt mit `ntn_`. Es ist ein Passwort — es gehört in 1Password.
+**Der zuverlässige Weg:** Diese Adresse in die Adresszeile eines Browsers
+eingeben — nicht in die Notion-Suche, nicht in die Notion-App:
 
-Unter **Capabilities** müssen **Read**, **Update** und **Insert content**
-aktiv sein. Ohne *Insert content* kann der Builder nichts anlegen.
+```
+https://www.notion.so/my-integrations
+```
+
+> **Wichtig:** Im Browser, nicht in der Notion-App. Die Desktop-App öffnet
+> Entwicklerseiten nicht zuverlässig. Chrome, Safari oder Firefox verwenden.
+
+Alternativ über die Oberfläche:
+**Einstellungen** (*Settings*) → **Verbindungen** (*Connections*) → ganz unten
+**Integrationen entwickeln oder verwalten** (*Develop or manage integrations*).
+
+### Auf der Seite
+
+Die Beschriftungen sind englisch, auch wenn dein Notion deutsch ist:
+
+1. **New integration**
+2. **Name**: `Novera Builder`
+3. **Associated workspace**: deinen Novera-Workspace wählen
+4. **Type**: **Internal**
+5. **Save**
+6. Danach **Configure** → bei **Internal Integration Secret** auf **Show** →
+   den Wert kopieren
+
+Das Secret beginnt mit `ntn_`. Es ist ein Passwort — behandle es wie eins.
+
+### Berechtigungen prüfen
+
+Auf derselben Seite unter **Capabilities** müssen aktiv sein:
+
+- **Read content**
+- **Update content**
+- **Insert content**
+
+Ohne *Insert content* kann der Builder nichts anlegen.
 
 ---
 
 ## 4 — Seite anlegen und freigeben
 
-**Das ist der Schritt, an dem es am häufigsten hakt.** Notion zeigt einer
-Integration ausschließlich Seiten, die ausdrücklich für sie freigegeben wurden.
-Ohne diesen Schritt findet der Builder die Seite nicht — obwohl sie da ist.
+**Hier gehen die meisten schief.** Notion zeigt einer Integration ausschließlich
+Seiten, die ausdrücklich für sie freigegeben wurden.
 
-1. In Notion eine neue leere Seite anlegen, z.B. `Novera`
+1. Eine neue leere Seite anlegen, z.B. `Novera`
 2. Oben rechts auf **•••**
-3. **Connections** (Verbindungen) → **Connect to** → `Novera Builder`
-4. Die Adresse der Seite kopieren — **•••** → **Copy link**
+3. **Verbindungen** (*Connections*) → **Verbindung hinzufügen** (*Connect to*)
+4. `Novera Builder` auswählen
+5. **•••** → **Link kopieren** (*Copy link*) → die Adresse kopieren
+
+> Findest du **Verbindungen** im •••-Menü nicht, scroll darin nach unten — der
+> Punkt sitzt je nach Notion-Version weiter unten oder heißt in älteren
+> Fassungen noch **Hinzufügen von Verbindungen**.
 
 ---
 
@@ -274,3 +307,4 @@ Token noch Internet. Nützlich nach jeder Änderung am Schema.
 | `rate_limited` | zu viele Anfragen | Der Builder wartet und wiederholt selbst |
 | Lauf bricht mittendrin ab | Netz | `npm run build` erneut — er setzt auf |
 | `command not found: npm` | Node fehlt | Schritt 1 |
+| „my-integrations" nicht auffindbar | in der Notion-Suche gesucht statt im Browser | Adresse in die Adresszeile eines Browsers eingeben |
