@@ -7,10 +7,14 @@ Grundsatz: **so einfach wie möglich, so umfangreich wie nötig.**
 
 ```bash
 npm install
-cp .env.example .env     # Token und Seiten-URL eintragen
-npm run check            # sagt dir, ob alles passt
+cp .env.example .env     # Token, Seiten-URL und Widget-Adresse eintragen
+npm run check            # prüft Token, Seite und Schreibrecht
 npm run build
 ```
+
+Vorher einmal GitHub Pages einschalten (**Settings → Pages → Source: GitHub
+Actions**) — aus dieser Adresse holt der Builder Logo, Cover, Uhr und Timer.
+Der vollständige Ablauf steht in [docs/SETUP.md](docs/SETUP.md).
 
 ---
 

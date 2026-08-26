@@ -1,11 +1,17 @@
 # Veröffentlicht widget/ als GitHub Page.
 # Ergebnis-URL: https://<user>.github.io/<repo>/
-# Diese URL kommt in NOVERA_CLOCK_URL und wird im HQ-Header eingebettet.
+#
+# Diese Adresse kommt in NOVERA_CLOCK_URL. Der Builder holt daraus vier Dinge:
+# Logo als Seiten-Icon, Ambiente-Cover, Uhr im Kopf und Fokus-Timer.
+#
+# Läuft auf main und auf den claude/*-Arbeitsbranches — sonst müsste man erst
+# mergen, bevor man das Widget überhaupt sehen kann. Über "Run workflow" im
+# Reiter Actions lässt er sich zusätzlich für jeden Branch von Hand starten.
 name: Deploy widget to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, "claude/**"]
     paths: ["widget/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 

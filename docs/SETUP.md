@@ -9,10 +9,11 @@ Der Ablauf ist immer derselbe:
 2. Repo holen             einmalig
 3. Integration in Notion  einmalig
 4. Seite freigeben        ← hier gehen die meisten schief
-5. .env ausfüllen
-6. npm run check          sagt dir, ob alles passt
-7. npm run build          baut den Workspace
-8. Handgriffe in Notion   siehe MANUELL-EINZURICHTEN.md
+5. Widget veröffentlichen ← vor dem Bauen, sonst baust du zweimal
+6. .env ausfüllen
+7. npm run check          sagt dir, ob alles passt
+8. npm run build          baut den Workspace
+9. Handgriffe in Notion   siehe MANUELL-EINZURICHTEN.md
 ```
 
 ---
@@ -77,7 +78,45 @@ Ohne diesen Schritt findet der Builder die Seite nicht — obwohl sie da ist.
 
 ---
 
-## 5 — .env ausfüllen
+## 5 — Widget veröffentlichen
+
+**Das kommt bewusst vor dem Bauen.** Aus dieser einen Adresse holt der Builder
+vier Dinge: das Logo als Seiten-Icon, das Ambiente-Cover, die Uhr im Kopf und den
+Fokus-Timer. Baust du vorher, stehen an all diesen Stellen Platzhalter und du
+musst ein zweites Mal bauen.
+
+Notion hat keine Uhr, die von selbst weiterläuft. Das Widget in `widget/`
+liefert sie.
+
+### Pages einschalten
+
+1. Im Repo auf **Settings** → **Pages**
+2. Bei **Source**: **GitHub Actions** wählen
+
+### Workflow starten
+
+Der Workflow läuft automatisch bei jedem Push auf `main`. Solange die Arbeit noch
+auf einem Branch liegt, startest du ihn von Hand:
+
+1. Reiter **Actions** → links **Deploy widget to GitHub Pages**
+2. Rechts **Run workflow** → oben den Branch auswählen → **Run workflow**
+
+Nach etwa einer Minute steht die Seite unter:
+
+```
+https://clarknissen-lab.github.io/NoveraHQ/
+```
+
+Ruf sie einmal im Browser auf. Du solltest den Novera-Header mit laufender Uhr
+sehen. Erscheint 404, ist der Workflow noch nicht durch — im Reiter **Actions**
+nachsehen.
+
+> Sobald der Branch in `main` gelandet ist, läuft der Workflow bei jeder Änderung
+> an `widget/` von allein.
+
+---
+
+## 6 — .env ausfüllen
 
 ```bash
 cp .env.example .env
@@ -94,6 +133,15 @@ NOTION_PARENT_PAGE=https://www.notion.so/Novera-24f1a0b3c4d5e6f7a8b9c0d1e2f3a4b5
 
 Die komplette Seiten-URL genügt — der Builder holt sich die ID selbst heraus.
 
+Dazu die Adresse aus Schritt 5:
+
+```
+NOVERA_CLOCK_URL=https://clarknissen-lab.github.io/NoveraHQ/
+```
+
+Daraus leitet der Builder auch Seiten-Icon, Ambiente-Cover und Fokus-Timer ab —
+die musst du nicht einzeln eintragen.
+
 Alles Weitere in der Datei ist optional und darf leer bleiben. Fehlt ein Wert,
 entsteht an der Stelle im Dashboard ein orange markierter Hinweis, was noch fehlt.
 
@@ -101,7 +149,7 @@ entsteht an der Stelle im Dashboard ein orange markierter Hinweis, was noch fehl
 
 ---
 
-## 6 — Verbindungstest
+## 7 — Verbindungstest
 
 ```bash
 npm run check
@@ -125,7 +173,7 @@ Beim ersten Problem bricht er ab und sagt konkret, was zu tun ist:
 
 ---
 
-## 7 — Bauen
+## 8 — Bauen
 
 ```bash
 npm run build
@@ -155,23 +203,14 @@ npm run build:dry             # nichts schreiben, nur prüfen
 
 ---
 
-## 8 — Widget veröffentlichen
+## 9 — Handgriffe in Notion
 
-Notion hat keine Uhr, die von selbst weiterläuft. Das Widget in `widget/`
-liefert sie — zusammen mit Logo, Wortmarke und dem Fokus-Timer.
+Vier Dinge kann die Notion-API nicht. Sie stehen mit exakten Klicks in
+**[MANUELL-EINZURICHTEN.md](MANUELL-EINZURICHTEN.md)**. Etwa 25 Minuten einmalig.
 
-1. Im Repo: **Settings** → **Pages** → Source: **GitHub Actions**
-2. Nach `main` pushen — der Workflow `pages.yml` veröffentlicht `widget/`
-3. Die Seite liegt dann unter `https://clarknissen-lab.github.io/NoveraHQ/`
-4. In `.env` eintragen und noch einmal bauen:
+---
 
-```
-NOVERA_CLOCK_URL=https://clarknissen-lab.github.io/NoveraHQ/
-```
-
-Daraus leitet der Builder auch das Seiten-Icon (`brand/favicon.svg`), den
-Fokus-Timer (`focus.html`) und das Ambiente-Cover (`brand/cover.jpg`) ab — die
-musst du nicht einzeln eintragen.
+## Widget-Einstellungen
 
 Sprache und Zeitformat über die URL:
 
@@ -190,13 +229,6 @@ Lichtwolken in den Widgets — lässt sich in `.env` abschalten:
 ```
 NOVERA_AMBIENT=off
 ```
-
----
-
-## 9 — Handgriffe in Notion
-
-Vier Dinge kann die Notion-API nicht. Sie stehen mit exakten Klicks in
-**[MANUELL-EINZURICHTEN.md](MANUELL-EINZURICHTEN.md)**. Etwa 25 Minuten einmalig.
 
 ---
 
