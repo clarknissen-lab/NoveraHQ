@@ -1,0 +1,136 @@
+# Baut das Novera HQ in Notion — ohne dass auf dem eigenen Rechner etwas
+# installiert werden muss.
+#
+# Einmalig einzurichten:
+#   Settings → Secrets and variables → Actions → New repository secret
+#     NOTION_TOKEN         das Internal Integration Secret (ntn_...)
+#     NOTION_PARENT_PAGE   die Adresse der freigegebenen Notion-Seite
+#
+# Danach: Reiter Actions → "Novera HQ in Notion bauen" → Run workflow.
+#
+# Startet ausschließlich von Hand. Ein Lauf schreibt in ein echtes Notion —
+# das soll nicht versehentlich bei einem Push passieren.
+name: Novera HQ in Notion bauen
+
+on:
+  workflow_dispatch:
+    inputs:
+      beispieldaten:
+        description: "Beispieldaten anlegen (Musterkunde, Projekt, Aufgaben)"
+        type: boolean
+        default: true
+      ambiente:
+        description: "Ambiente-Licht (Cover und getönte Sektionsbänder)"
+        type: boolean
+        default: true
+      testlauf:
+        description: "Nur testen, nichts in Notion schreiben"
+        type: boolean
+        default: false
+
+# Zum Zurückschreiben der State-Datei, damit ein zweiter Lauf nichts doppelt anlegt.
+permissions:
+  contents: write
+
+concurrency:
+  group: novera-build
+  cancel-in-progress: false
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+
+    env:
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      NOTION_PARENT_PAGE: ${{ secrets.NOTION_PARENT_PAGE }}
+      # Die Adresse der GitHub Page ergibt sich aus dem Repo selbst — sie muss
+      # deshalb nirgends eingetragen werden. Daraus holt der Builder Logo,
+      # Ambiente-Cover, Uhr und Fokus-Timer.
+      NOVERA_CLOCK_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+      NOVERA_SPOTIFY_URL: ${{ secrets.NOVERA_SPOTIFY_URL }}
+      NOVERA_GCAL_EMBED_URL: ${{ secrets.NOVERA_GCAL_EMBED_URL }}
+      NOVERA_DRIVE_URL: ${{ secrets.NOVERA_DRIVE_URL }}
+      NOVERA_GITHUB_URL: ${{ secrets.NOVERA_GITHUB_URL }}
+      NOVERA_AMBIENT: ${{ inputs.ambiente && 'on' || 'off' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Zugangsdaten vorhanden?
+        run: |
+          fehlt=0
+          if [ -z "$NOTION_TOKEN" ]; then
+            echo "::error::Das Secret NOTION_TOKEN fehlt."
+            fehlt=1
+          fi
+          if [ -z "$NOTION_PARENT_PAGE" ]; then
+            echo "::error::Das Secret NOTION_PARENT_PAGE fehlt."
+            fehlt=1
+          fi
+          if [ "$fehlt" = "1" ]; then
+            echo "::notice::Settings → Secrets and variables → Actions → New repository secret"
+            exit 1
+          fi
+
+      - name: Verbindung prüfen
+        if: ${{ !inputs.testlauf }}
+        run: npm run check
+
+      - name: Testlauf ohne Notion
+        if: ${{ inputs.testlauf }}
+        run: |
+          npm run verify
+          npm run build:dry
+
+      - name: Workspace bauen
+        if: ${{ !inputs.testlauf }}
+        run: |
+          if [ "${{ inputs.beispieldaten }}" = "false" ]; then
+            npm run build -- --no-seed
+          else
+            npm run build
+          fi
+
+      # Die Datei enthält nur Notion-IDs, keine Zugangsdaten. Sie muss erhalten
+      # bleiben: ohne sie legt ein zweiter Lauf alles ein zweites Mal an.
+      - name: Angelegte IDs sichern
+        if: ${{ !inputs.testlauf }}
+        run: |
+          if [ ! -f .novera-state.json ]; then
+            echo "Keine State-Datei entstanden — nichts zu sichern."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f .novera-state.json
+          if git diff --cached --quiet; then
+            echo "State unverändert."
+          else
+            git commit -m "Notion-IDs des letzten Laufs sichern [skip ci]"
+            git push
+          fi
+
+      - name: Nächste Schritte
+        if: ${{ !inputs.testlauf }}
+        run: |
+          {
+            echo "## Novera HQ steht in Notion"
+            echo ""
+            echo "Öffne Notion — unter deiner freigegebenen Seite liegt jetzt **NOVERA STUDIO**."
+            echo ""
+            echo "### Was noch von Hand fehlt"
+            echo ""
+            echo "Die Notion-API kann keine verknüpften Ansichten in eine Seite einfügen und"
+            echo "keine Datenbank-Vorlagen schreiben. Beides steht mit exakten Klicks in"
+            echo "\`docs/MANUELL-EINZURICHTEN.md\` — etwa 25 Minuten."
+            echo ""
+            echo "Im Workspace erkennst du jede offene Stelle an einem orangen Kasten mit 🔧."
+          } >> "$GITHUB_STEP_SUMMARY"

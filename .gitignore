@@ -1,4 +1,7 @@
 node_modules/
-.novera-state.json
 .env
 .DS_Store
+
+# .novera-state.json ist bewusst NICHT ausgeschlossen: Die Datei enthält nur die
+# IDs der angelegten Notion-Objekte, keine Zugangsdaten. Sie muss erhalten
+# bleiben — ohne sie legt ein zweiter Lauf alles ein zweites Mal an.

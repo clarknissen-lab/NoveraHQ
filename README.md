@@ -5,6 +5,14 @@ Notion-API, nicht von Hand geklickt.
 
 Grundsatz: **so einfach wie möglich, so umfangreich wie nötig.**
 
+Zwei Wege, beide bauen exakt dasselbe:
+
+**Ohne Terminal** — alles im Browser, der Builder läuft auf GitHub:
+zwei Secrets eintragen, auf *Run workflow* klicken.
+→ [docs/OHNE-TERMINAL.md](docs/OHNE-TERMINAL.md)
+
+**Auf dem eigenen Rechner:**
+
 ```bash
 npm install
 cp .env.example .env     # Token, Seiten-URL und Widget-Adresse eintragen
@@ -12,9 +20,7 @@ npm run check            # prüft Token, Seite und Schreibrecht
 npm run build
 ```
 
-Vorher einmal GitHub Pages einschalten (**Settings → Pages → Source: GitHub
-Actions**) — aus dieser Adresse holt der Builder Logo, Cover, Uhr und Timer.
-Der vollständige Ablauf steht in [docs/SETUP.md](docs/SETUP.md).
+→ [docs/SETUP.md](docs/SETUP.md)
 
 ---
 
@@ -66,7 +72,8 @@ Die Property `Passwort` in *Zugänge* ist eine feste Formel — sie lässt sich 
 
 | Datei | Inhalt |
 |---|---|
-| [docs/SETUP.md](docs/SETUP.md) | Von null zum fertigen Workspace, Schritt für Schritt |
+| [docs/OHNE-TERMINAL.md](docs/OHNE-TERMINAL.md) | Alles im Browser — der Builder läuft auf GitHub |
+| [docs/SETUP.md](docs/SETUP.md) | Derselbe Weg über die Kommandozeile |
 | [docs/NOTION-VERBINDEN.md](docs/NOTION-VERBINDEN.md) | Die zwei Wege, Notion anzubinden — und welcher wofür taugt |
 | [docs/MANUELL-EINZURICHTEN.md](docs/MANUELL-EINZURICHTEN.md) | Was die API nicht kann — mit exakten Klicks, ~30 Minuten |
 | [docs/DATENMODELL.md](docs/DATENMODELL.md) | Datenbanken, Relations, Formeln und warum sie so aussehen |

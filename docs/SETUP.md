@@ -1,4 +1,8 @@
-# Setup
+# Setup — auf dem eigenen Rechner
+
+> **Kein Terminal zur Hand?** Der Builder läuft auch direkt auf GitHub, ganz im
+> Browser: **[OHNE-TERMINAL.md](OHNE-TERMINAL.md)**. Beide Wege bauen exakt
+> dasselbe. Diese Anleitung hier ist der Weg über die Kommandozeile.
 
 Vom leeren Notion zum fertigen Novera HQ. Rechne mit 15 Minuten.
 
