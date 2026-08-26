@@ -88,6 +88,11 @@ jobs:
         if: ${{ inputs.testlauf }}
         run: |
           npm run verify
+          # verify fährt den echten Builder gegen einen nachgebauten Server und
+          # hinterlässt dabei einen State mit dessen IDs. Ohne Löschen liest der
+          # Trockenlauf danach genau diesen State, meldet überall "existiert
+          # bereits" und prüft den Anlegepfad damit gar nicht.
+          rm -f .novera-state.json
           npm run build:dry
 
       - name: Workspace bauen
@@ -107,6 +112,13 @@ jobs:
           if [ ! -f .novera-state.json ]; then
             echo "Keine State-Datei entstanden — nichts zu sichern."
             exit 0
+          fi
+          # Echte Notion-IDs sind UUIDs. Alles andere stammt aus dem
+          # nachgebauten Server und darf nie ins Repo zurück — ein zweiter
+          # Lauf würde sonst denken, alles sei schon angelegt, und nichts tun.
+          if ! grep -qE '"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"' .novera-state.json; then
+            echo "::error::State enthält keine echten Notion-IDs — wird nicht gesichert."
+            exit 1
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
