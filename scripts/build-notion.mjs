@@ -33,6 +33,8 @@
  * werden beim nächsten Mal wiederverwendet statt doppelt angelegt.
  */
 
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { loadEnv } from "./lib/env.mjs";
 import {
   makeClient, loadState, saveState, withRetry, addProperties,
@@ -76,6 +78,21 @@ const mitThema = (url) => {
     (NOTION_THEME === "light" ? "light" : "dark");
 };
 
+/**
+ * Kurzprüfsumme des Cover-Bildes als Adresszusatz.
+ * Fehlt die Datei — etwa weil der Builder ohne Repo läuft — bleibt die Adresse
+ * unverändert; ein Cover ohne Fassungsnummer ist besser als gar keins.
+ */
+function coverFassung() {
+  try {
+    const datei = new URL("../widget/brand/cover.jpg", import.meta.url).pathname;
+    const summe = createHash("sha1").update(readFileSync(datei)).digest("hex");
+    return "?v=" + summe.slice(0, 8);
+  } catch {
+    return "";
+  }
+}
+
 const BASIS = process.env.NOVERA_CLOCK_URL
   ? process.env.NOVERA_CLOCK_URL.replace(/\/?$/, "/")
   : null;
@@ -96,8 +113,11 @@ const URLS = {
   driveRoot: process.env.NOVERA_DRIVE_URL || null,
   github: process.env.NOVERA_GITHUB_URL || null,
 
-  // Ambiente-Cover liegt neben dem Widget.
-  cover: BASIS ? BASIS + "brand/cover.jpg" : null,
+  // Ambiente-Cover liegt neben dem Widget. Notion merkt sich ein externes
+  // Cover anhand seiner Adresse und lädt es nicht neu, wenn sich nur der
+  // Inhalt der Datei ändert. Deshalb hängt eine Kurzprüfsumme der Datei an —
+  // ändert sich das Bild, ändert sich die Adresse.
+  cover: BASIS ? BASIS + "brand/cover.jpg" + coverFassung() : null,
 };
 
 /**
@@ -378,6 +398,35 @@ async function createPage(key, { parent, title, icon, iconUrl, coverUrl, blocks 
 }
 
 /**
+ * Setzt das Cover einer bestehenden Seite neu, wenn es sich geändert hat.
+ *
+ * createPage setzt das Cover nur beim Anlegen. Ändert sich später das Bild,
+ * bliebe auf der Seite das alte stehen — Notion lädt ein externes Cover nicht
+ * von selbst neu. Die Adresse trägt eine Prüfsumme des Bildes, ein Vergleich
+ * mit dem zuletzt gesetzten Stand genügt deshalb. Blöcke und Unterseiten
+ * bleiben unberührt; das hier ist kein Neuaufbau.
+ */
+async function updateCover(pageId, coverUrl) {
+  if (!coverUrl || OPT.dryRun) return;
+  if (state.cover === coverUrl) { log.skip("Cover ist aktuell"); return; }
+
+  try {
+    await withRetry(
+      () => notion.pages.update({
+        page_id: pageId,
+        cover: { type: "external", external: { url: coverUrl } },
+      }),
+      { label: "Cover setzen" }
+    );
+    state.cover = coverUrl;
+    saveState(state);
+    log.ok("Cover aktualisiert");
+  } catch (err) {
+    warn("Cover konnte nicht aktualisiert werden: " + errText(err));
+  }
+}
+
+/**
  * Löscht alle Blöcke einer Seite.
  *
  * Nötig, um das Dashboard zu ersetzen statt zu verdoppeln: Blöcke lassen sich
@@ -543,6 +592,7 @@ async function main() {
   if (!URLS.logo) {
     warn("NOVERA_LOGO_URL nicht gesetzt — HQ bekommt ◆ statt des Logos. Siehe docs/BRANDING.md.");
   }
+  await updateCover(hq, AMBIENT ? URLS.cover : null);
 
   await createDatabases(hq);
   await createRelations();

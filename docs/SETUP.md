@@ -304,6 +304,15 @@ einem Abbruch — Netzfehler, Rate Limit — reicht ein erneutes `npm run build`
 Notion in den Papierkorb schieben. Ohne das Löschen entsteht ein zweiter Satz
 Datenbanken.
 
+**Nur das Dashboard neu:** `npm run build -- --refresh-hq`. Verwirft die Blöcke
+der HQ-Seite und setzt sie neu. Achtung: Von Hand eingefügte verknüpfte
+Ansichten sind danach weg — sie liegen als Blöcke auf derselben Seite.
+
+**Cover aktualisieren:** passiert bei jedem Lauf von allein. Die Cover-Adresse
+trägt eine Prüfsumme des Bildes; ändert sich das Bild, ändert sich die Adresse,
+und der Builder setzt das Cover neu. Ohne das bliebe das alte stehen — Notion
+lädt ein externes Cover nicht nach, solange die Adresse gleich bleibt.
+
 ---
 
 ## Prüflauf ohne Notion

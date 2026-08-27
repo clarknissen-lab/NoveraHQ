@@ -256,6 +256,16 @@ const server = createServer((req, res) => {
       return send({ object: "page", id });
     }
 
+    /* PATCH /v1/pages/:id — hier nur das Cover einer bestehenden Seite. */
+    const pageMatch = url.match(/^\/v1\/pages\/([\w-]+)$/);
+    if (pageMatch && req.method === "PATCH") {
+      if (!store.pages[pageMatch[1]]) {
+        problems.push(`Cover-Update auf unbekannte Seite ${pageMatch[1]}.`);
+      }
+      if (payload.cover) store.covers.push(payload.cover?.external?.url ?? "?");
+      return send({ object: "page", id: pageMatch[1] });
+    }
+
     /* PATCH /v1/blocks/:id/children */
     const blockMatch = url.match(/^\/v1\/blocks\/([\w-]+)\/children$/);
     if (blockMatch && req.method === "PATCH") {
@@ -423,6 +433,11 @@ server.listen(0, "127.0.0.1", () => {
       // Block auf der dunklen Notion-Seite.
       ["Widget-Embeds tragen das Notion-Thema", widgetEmbeds().length > 0 &&
         widgetEmbeds().every((u) => /[?&]theme=(dark|light)\b/.test(u))],
+
+      // Notion lädt ein externes Cover nicht neu, wenn nur der Dateiinhalt
+      // wechselt. Ohne Prüfsumme in der Adresse bliebe die alte Kante stehen.
+      ["Cover trägt eine Fassungsnummer", store.covers.length > 0 &&
+        store.covers.every((u) => /[?&]v=[0-9a-f]{8}/.test(u))],
     ];
 
     /* Die Abschlussprüfung aus dem Audit: der komplette Weg eines Kunden.
