@@ -298,6 +298,10 @@ async function createViews() {
 
       const payload = {
         data_source_id: entry.dataSourceId,
+        // Notion verlangt zusätzlich genau eines von database_id, view_id oder
+        // create_database. Ohne database_id antwortet es mit
+        // "Exactly one of database_id, view_id, or create_database must be provided".
+        database_id: entry.databaseId,
         name: view.name,
         type: view.type,
         position: { type: "end" },

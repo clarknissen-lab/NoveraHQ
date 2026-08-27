@@ -153,6 +153,15 @@ const server = createServer((req, res) => {
       const ds = store.dataSources[payload.data_source_id];
       if (!ds) return send({ object: "error", status: 400, code: "validation_error", message: "unknown data source" }, 400);
 
+      // Der echte Server verlangt genau eines von database_id, view_id oder
+      // create_database — data_source_id allein genügt nicht.
+      const anker = ["database_id", "view_id", "create_database"].filter((k) => payload[k]);
+      if (anker.length !== 1) {
+        problems.push(
+          `${ds.name} / ${payload.name}: ${anker.length} von database_id/view_id/create_database gesetzt — genau eines ist nötig.`
+        );
+      }
+
       // Filter gegen die tatsächlichen Properties prüfen.
       const checkFilter = (node) => {
         if (!node || typeof node !== "object") return;
@@ -268,6 +277,23 @@ function countBlocks(blocks) {
     if (/^heading_[123]$/.test(type) && inner.color) {
       store.headingColors[inner.color] = (store.headingColors[inner.color] ?? 0) + 1;
     }
+    // Notion akzeptiert als callout.icon.emoji ausschließlich echte Emoji.
+    // Schriftzeichen wie ＋ (U+FF0B), ▪ (U+25AA) oder ✓ (U+2713) sehen passend
+    // aus, werden aber mit einem validation_error abgelehnt.
+    if (type === "callout") {
+      const zeichen = inner?.icon?.emoji;
+      if (inner?.icon?.type === "emoji") {
+        if (!zeichen) {
+          problems.push("Callout mit icon.type emoji, aber ohne Zeichen.");
+        } else if (!/^\p{Emoji_Presentation}/u.test(zeichen)) {
+          const punkte = [...zeichen]
+            .map((c) => "U+" + c.codePointAt(0).toString(16).toUpperCase().padStart(4, "0"))
+            .join(" ");
+          problems.push(`Callout-Icon "${zeichen}" (${punkte}) ist kein Emoji — Notion lehnt es ab.`);
+        }
+      }
+    }
+
     if (type === "embed" && !inner.url) problems.push("Embed ohne URL.");
     if (type === "bookmark" && !inner.url) problems.push("Bookmark ohne URL.");
   }

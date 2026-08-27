@@ -80,13 +80,19 @@ export function hqBlocks({ db, pages, urls }) {
   const dbLink = (key) => (db[key] ? linkToDatabase(db[key].databaseId) : null);
   const pgLink = (key) => (pages[key] ? linkToPage(pages[key]) : null);
 
-  /** Kleine Karte, die zur Datenbank führt. Dort legt „Neu" den Eintrag an. */
+  /**
+   * Kleine Karte, die zur Datenbank führt. Dort legt „Neu" den Eintrag an.
+   *
+   * Das Icon muss ein echtes Emoji sein — Notion lehnt Schriftzeichen wie
+   * ＋ (U+FF0B) oder ✓ (U+2713) mit einem validation_error ab, obwohl sie
+   * optisch passen würden.
+   */
   const aktion = (label, key) =>
     db[key]
-      ? callout(rtParts([[label, { bold: true }]]), "\uFF0B", "gray_background", [
+      ? callout(rtParts([[label, { bold: true }]]), "\u2795", "gray_background", [
           linkToDatabase(db[key].databaseId),
         ])
-      : callout(rtParts([[label, { bold: true }]]), "\uFF0B", "gray_background");
+      : callout(rtParts([[label, { bold: true }]]), "\u2795", "gray_background");
 
   /** Kachel im Arbeitsbereich: Titel, kurze Erklärung, Sprung zur Datenbank. */
   const kachel = (icon, label, was, key) =>
@@ -347,7 +353,7 @@ export function kundenakteBlocks() {
         ["Kundenakte", { bold: true }],
         ["  ·  Stammdaten stehen oben in den Eigenschaften. Alles Weitere hängt über Relations daran.", { color: "gray" }],
       ]),
-      "▪",
+      "◾",
       "gray_background"
     ),
 
@@ -433,7 +439,7 @@ export function projektBlocks() {
         ["Website-Projekt", { bold: true }],
         ["  ·  Kunde, Deadline, Preis und Fortschritt stehen oben in den Eigenschaften.", { color: "gray" }],
       ]),
-      "▪",
+      "◾",
       "gray_background"
     ),
 
@@ -593,7 +599,7 @@ export function blueprintBlocks() {
         ["  Version hochzählen statt überschreiben — so bleibt nachvollziehbar, was der Kunde " +
          "wann freigegeben hat.", { color: "gray" }],
       ]),
-      "✓",
+      "✅",
       "gray_background"
     ),
     toggle("Wie die Versionierung gedacht ist", [

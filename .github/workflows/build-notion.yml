@@ -106,8 +106,12 @@ jobs:
 
       # Die Datei enthält nur Notion-IDs, keine Zugangsdaten. Sie muss erhalten
       # bleiben: ohne sie legt ein zweiter Lauf alles ein zweites Mal an.
+      #
+      # always(): Bricht der Bau mittendrin ab, sind die bis dahin angelegten
+      # Objekte trotzdem in Notion. Würde der Schritt dann übersprungen, gingen
+      # ihre IDs verloren und der nächste Lauf legte alles doppelt an.
       - name: Angelegte IDs sichern
-        if: ${{ !inputs.testlauf }}
+        if: ${{ always() && !inputs.testlauf }}
         run: |
           if [ ! -f .novera-state.json ]; then
             echo "Keine State-Datei entstanden — nichts zu sichern."
