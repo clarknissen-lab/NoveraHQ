@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Novera Studio — Fokus</title>
 <link rel="icon" href="brand/favicon.svg">
+<script>
+  /* Läuft vor dem ersten Anstrich, damit kein Themenwechsel aufblitzt.
+     ?theme=dark|light schlägt das System-Thema — nötig, weil das Embed
+     Notions eigene Einstellung nicht lesen kann. */
+  (function () {
+    var w = new URLSearchParams(location.search).get("theme");
+    var hell = w === "light" || (w !== "dark" &&
+      window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches);
+    document.documentElement.setAttribute("data-theme", hell ? "light" : "dark");
+  })();
+</script>
 <style>
   @font-face {
     font-family: 'Inter';
@@ -41,23 +52,27 @@
     --amb-pink-in: rgba(244, 169, 218, .10);
     --amb-blau-in: rgba(147, 169, 242, .10);
   }
-  @media (prefers-color-scheme: light) {
-    :root {
-      color-scheme: light;
-      --void:#FBFBFC; --slate:#FFFFFF;
-      --platinum:#12161B; --silver:#545C66; --muted:#69717A;
-      --line: rgba(18,22,27,.10); --line-strong: rgba(18,22,27,.19);
-      --glow-soft: rgba(120,155,200,.13);
-      --chrome-0:#2A2E35; --chrome-1:#101216; --chrome-2:#3A404A;
-      --chrome-3:#14171C; --chrome-4:#22262D;
-      --karte: linear-gradient(168deg, rgba(18,22,27,.028), rgba(18,22,27,0) 55%);
-      --amb-lila: rgba(140, 122, 214, .22);
-      --amb-pink: rgba(214, 132, 182, .17);
-      --amb-blau: rgba(120, 142, 214, .17);
-      --amb-lila-in: rgba(140, 122, 214, .07);
-      --amb-pink-in: rgba(214, 132, 182, .06);
-      --amb-blau-in: rgba(120, 142, 214, .06);
-    }
+  /* Der Hellmodus der Marke dreht den Verlauf ins Graphit.
+     Gesteuert über data-theme am <html> statt über prefers-color-scheme:
+     In einem Notion-Embed meldet die Medienabfrage das System-Thema, nicht
+     das von Notion. Wer Notion dunkel und das System hell nutzt, bekäme
+     sonst einen weißen Block auf dunkler Seite. Das Kopf-Skript setzt
+     data-theme aus ?theme= oder — ohne Angabe — aus dem System-Thema. */
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --void:#FBFBFC; --slate:#FFFFFF;
+    --platinum:#12161B; --silver:#545C66; --muted:#69717A;
+    --line: rgba(18,22,27,.10); --line-strong: rgba(18,22,27,.19);
+    --glow-soft: rgba(120,155,200,.13);
+    --chrome-0:#2A2E35; --chrome-1:#101216; --chrome-2:#3A404A;
+    --chrome-3:#14171C; --chrome-4:#22262D;
+    --karte: linear-gradient(168deg, rgba(18,22,27,.028), rgba(18,22,27,0) 55%);
+    --amb-lila: rgba(140, 122, 214, .22);
+    --amb-pink: rgba(214, 132, 182, .17);
+    --amb-blau: rgba(120, 142, 214, .17);
+    --amb-lila-in: rgba(140, 122, 214, .07);
+    --amb-pink-in: rgba(214, 132, 182, .06);
+    --amb-blau-in: rgba(120, 142, 214, .06);
   }
 
 
@@ -106,6 +121,34 @@
   }
 
   /* Wer Bewegung reduziert, bekommt das Licht — nur ohne Wandern. */
+  /* ── Nahtlos ─────────────────────────────────────────────────────────
+     Standard für die Einbettung in Notion: Der Grund entspricht der
+     Notion-Seite, die Karte verliert Rahmen, Rundung und Schatten. Damit
+     sitzt der Inhalt auf der Seite statt in einem Kasten darauf.
+     Mit ?card=1 kommt der Rahmen zurück — sinnvoll, wenn man das Widget
+     allein im Browser öffnet.
+  */
+  body.nahtlos { background: var(--notion-grund); padding: 0; }
+  body.nahtlos .card {
+    background-color: transparent;
+    background-image: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    max-width: none;
+  }
+  body.nahtlos .card::before { display: none; }
+
+  /* Kein Ambiente-Licht im nahtlosen Modus.
+     Ohne Karte füllt es sonst den kompletten Einbettungsrahmen und legt einen
+     farbigen Block auf die Seite — das Gegenteil von verschmelzen. Die
+     Lichtstimmung trägt das Cover darüber; hier bleibt reiner Inhalt. */
+  body.nahtlos::before,
+  body.nahtlos::after { display: none; }
+
+  /* Eng gesetzt, damit im Einbettungsrahmen kein leeres Band entsteht. */
+  body.nahtlos .card { padding: 4px 2px; }
+
   @media (prefers-reduced-motion: reduce) {
     body.ambient::before,
     body.ambient::after { animation: none; }
@@ -122,6 +165,9 @@
   }
 
   .card { z-index: 1; }
+
+  :root { --notion-grund: #191919; }
+  :root[data-theme="light"] { --notion-grund: #FFFFFF; }
 
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { height:100%; }
@@ -238,6 +284,12 @@
   // Ambiente-Licht. Standard an, mit ?ambient=off aus.
   if ((params.get("ambient") || "on") !== "off") {
     document.body.classList.add("ambient");
+  }
+
+  // Nahtlos ist der Standard: In Notion soll das Widget Teil der Seite sein,
+  // kein aufgesetzter Kasten. ?card=1 stellt den Rahmen wieder her.
+  if (params.get("card") !== "1") {
+    document.body.classList.add("nahtlos");
   }
 
   var num     = function (key, fallback) {

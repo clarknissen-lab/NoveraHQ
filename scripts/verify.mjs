@@ -24,7 +24,7 @@ const STATE = new URL("../.novera-state.verify.json", import.meta.url).pathname;
 
 /* ─────────────────────────────────────────────── Notion-Nachbau */
 
-const store = { dataSources: {}, databases: {}, pages: {}, views: [], blocks: [], records: [], covers: [], headingColors: {} };
+const store = { dataSources: {}, databases: {}, pages: {}, views: [], blocks: [], records: [], covers: [], headingColors: {}, embeds: [] };
 const problems = [];
 let counter = 0;
 const nextId = (p) => `${p}-${String(++counter).padStart(4, "0")}`;
@@ -325,7 +325,10 @@ function countBlocks(blocks) {
       }
     }
 
-    if (type === "embed" && !inner.url) problems.push("Embed ohne URL.");
+    if (type === "embed") {
+      if (!inner.url) problems.push("Embed ohne URL.");
+      else store.embeds.push(inner.url);
+    }
     if (type === "bookmark" && !inner.url) problems.push("Bookmark ohne URL.");
   }
 }
@@ -414,6 +417,12 @@ server.listen(0, "127.0.0.1", () => {
       ["Branding-Link bei der Website", has("Websites", "Branding")],
       ["Novera Care bei Hosting gespiegelt", has("Hosting & Domains", "Novera Care")],
       ["Beispieldaten sind tatsächlich verknüpft", linkedRecords() >= 14],
+
+      // Ein Embed liest Notions Thema nicht, es meldet das des Rechners.
+      // Ohne theme= in der Adresse steht bei hellem System ein weißer
+      // Block auf der dunklen Notion-Seite.
+      ["Widget-Embeds tragen das Notion-Thema", widgetEmbeds().length > 0 &&
+        widgetEmbeds().every((u) => /[?&]theme=(dark|light)\b/.test(u))],
     ];
 
     /* Die Abschlussprüfung aus dem Audit: der komplette Weg eines Kunden.
@@ -461,5 +470,10 @@ function linkedRecords() {
 }
 
 function ds(name) { return Object.values(store.dataSources).find((d) => d.name === name); }
+
+/** Die eigenen Widgets — Fremd-Embeds wie Spotify oder Calendar bleiben außen vor. */
+function widgetEmbeds() {
+  return store.embeds.filter((u) => u.includes("github.io"));
+}
 function has(dbName, propName) { return Boolean(ds(dbName)?.properties[propName]); }
 function propType(dbName, propName) { return ds(dbName)?.properties[propName]?.type; }

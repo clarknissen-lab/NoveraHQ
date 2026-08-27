@@ -60,19 +60,35 @@ const OPT = {
 const TOKEN = process.env.NOTION_TOKEN;
 const PARENT = normalizeId(process.env.NOTION_PARENT_PAGE);
 
+/**
+ * Notions Seitenthema lässt sich aus einem Embed heraus nicht auslesen — die
+ * Medienabfrage im iframe meldet das System-Thema des Rechners. Wer Notion
+ * dunkel und macOS hell nutzt, bekäme sonst einen weißen Widget-Block auf
+ * dunkler Seite. Deshalb wird das Thema in die Adresse geschrieben.
+ * NOVERA_NOTION_THEME=light für ein helles Notion, =auto für System-Thema.
+ */
+const NOTION_THEME = (process.env.NOVERA_NOTION_THEME || "dark").toLowerCase();
+
+/** Hängt das Thema an eine Widget-Adresse an; "auto" lässt sie unberührt. */
+const mitThema = (url) => {
+  if (!url || NOTION_THEME === "auto") return url;
+  return url + (url.includes("?") ? "&" : "?") + "theme=" +
+    (NOTION_THEME === "light" ? "light" : "dark");
+};
+
+const BASIS = process.env.NOVERA_CLOCK_URL
+  ? process.env.NOVERA_CLOCK_URL.replace(/\/?$/, "/")
+  : null;
+
 const URLS = {
-  clock: process.env.NOVERA_CLOCK_URL || null,
+  clock: mitThema(process.env.NOVERA_CLOCK_URL || null),
   // Das Logo liegt im selben Verzeichnis wie das Widget, deshalb reicht die
   // Uhr-URL — eine eigene Angabe überschreibt sie.
   logo:
     process.env.NOVERA_LOGO_URL ||
-    (process.env.NOVERA_CLOCK_URL
-      ? process.env.NOVERA_CLOCK_URL.replace(/\/?$/, "/") + "brand/favicon.svg"
-      : null),
+    (BASIS ? BASIS + "brand/favicon.svg" : null),
   // Der Fokus-Timer liegt neben dem Uhr-Widget unter derselben Adresse.
-  focus: process.env.NOVERA_CLOCK_URL
-    ? process.env.NOVERA_CLOCK_URL.replace(/\/?$/, "/") + "focus.html"
-    : null,
+  focus: mitThema(BASIS ? BASIS + "focus.html" : null),
   spotifyEmbed: process.env.NOVERA_SPOTIFY_URL || null,
   // Derselbe Link, aber als Sprung in die Spotify-App statt als Einbettung.
   spotify: process.env.NOVERA_SPOTIFY_URL || null,
@@ -81,9 +97,7 @@ const URLS = {
   github: process.env.NOVERA_GITHUB_URL || null,
 
   // Ambiente-Cover liegt neben dem Widget.
-  cover: process.env.NOVERA_CLOCK_URL
-    ? process.env.NOVERA_CLOCK_URL.replace(/\/?$/, "/") + "brand/cover.jpg"
-    : null,
+  cover: BASIS ? BASIS + "brand/cover.jpg" : null,
 };
 
 /**

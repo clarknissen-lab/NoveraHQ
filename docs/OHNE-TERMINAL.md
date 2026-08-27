@@ -134,13 +134,19 @@ Workflow noch nicht durch — im Reiter **Actions** nachsehen.
 
 1. Reiter **Actions** → links **Novera HQ in Notion bauen**
 2. Rechts **Run workflow**
-3. Die drei Schalter stehen richtig voreingestellt:
+3. Die Schalter stehen richtig voreingestellt:
 
 | Schalter | Standard | Bedeutung |
 |---|---|---|
 | Beispieldaten | an | Musterkunde mit Projekt, Website, Angebot, Aufgaben |
 | Ambiente-Licht | an | Cover und getönte Sektionsbänder |
 | Nur testen | aus | an = nichts in Notion schreiben, nur prüfen |
+| Dashboard neu | aus | an = Dashboard verwerfen und neu aufbauen |
+| Notion-Thema | dark | auf `light` stellen, wenn Notion hell läuft |
+
+**Notion-Thema:** Ein eingebettetes Widget kann nicht erkennen, ob Notion hell
+oder dunkel läuft — es sieht nur das Thema des Rechners. Deshalb wird es hier
+gesetzt. Steht es falsch, liegt ein weißer Kasten auf der dunklen Seite.
 
 4. **Run workflow**
 

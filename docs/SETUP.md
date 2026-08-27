@@ -259,6 +259,9 @@ Sprache und Zeitformat über die URL:
 | `…/?tz=America/New_York` | eine andere Zeitzone |
 | `…/focus.html?work=50&break=10` | Timer mit 50/10 statt 25/5 |
 | `…/?ambient=off` | ohne Ambiente-Licht |
+| `…/?theme=dark` | dunkel, unabhängig vom Thema des Rechners |
+| `…/?theme=light` | hell, unabhängig vom Thema des Rechners |
+| `…/?card=1` | mit Rahmen statt nahtlos — für den Aufruf im Browser |
 
 Das Ambiente-Licht — Cover auf dem HQ, violett getönte Sektionsbänder, weiche
 Lichtwolken in den Widgets — lässt sich in `.env` abschalten:
@@ -266,6 +269,28 @@ Lichtwolken in den Widgets — lässt sich in `.env` abschalten:
 ```
 NOVERA_AMBIENT=off
 ```
+
+### Nahtlos statt Kasten
+
+In Notion laufen die Widgets ohne Rahmen, Rundung und Schatten: Der Grund
+entspricht der Notion-Seite, sodass Logo und Uhr auf der Seite sitzen statt in
+einem aufgesetzten Kasten. Das Ambiente-Licht trägt in dieser Ansicht das
+Cover darüber — im Widget selbst wäre es ein farbiger Block über die volle
+Einbettungsbreite.
+
+### Thema
+
+Ein Embed kann Notions Thema nicht auslesen; die Medienabfrage im iframe meldet
+das Thema des Rechners. Bei dunklem Notion und hellem macOS stünde sonst ein
+weißer Block auf dunkler Seite. Der Builder schreibt das Thema deshalb in die
+Adresse — voreingestellt dunkel:
+
+```
+NOVERA_NOTION_THEME=dark    # oder: light, auto
+```
+
+`auto` überlässt die Entscheidung dem Rechner. Im Actions-Lauf steht dieselbe
+Einstellung als Auswahlfeld **Notion-Thema** bereit.
 
 ---
 

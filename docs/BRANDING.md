@@ -74,9 +74,16 @@ An drei Stellen:
 
 | Wo | Was |
 |---|---|
-| HQ-Seite | Cover-Bild — Violett links, Rosé rechts, warmer Schimmer unten |
+| HQ-Seite | Cover-Bild — Lila links, Rosé rechts, Blau in der Mitte, nach unten auslaufend |
 | Sektionsbänder | `purple_background` statt `gray_background` |
-| Widgets | drei Lichtwolken hinter der Karte, langsam wandernd, plus ein sehr feiner Schimmer auf der Karte selbst |
+| Widgets | drei Lichtwolken hinter der Karte, langsam wandernd — nur im Rahmenmodus (`?card=1`) |
+
+**Das Licht liegt im Cover, nicht im Widget.** In Notion laufen die Widgets
+nahtlos: kein Rahmen, kein Kasten, der Grund entspricht der Seite. Damit füllt
+das Ambiente-Licht nicht mehr eine Karte, sondern die komplette
+Einbettungsbreite — es wird aus einer Lichtstimmung ein farbiger Balken. Deshalb
+ist es dort abgeschaltet. Die Stimmung trägt das Cover direkt darüber; das
+Widget bleibt reiner Inhalt auf demselben Grund.
 
 Schalter in `.env`:
 
@@ -87,6 +94,18 @@ NOVERA_AMBIENT=off    # durchgehend monochrom
 
 Bei `off` verschwinden Cover und Tönung; das Ergebnis ist exakt der vorherige
 Zustand. In den Widgets steuert `?ambient=off` dasselbe.
+
+### Die Unterkante des Covers
+
+Notions Seitengrund lässt sich weder über die API noch über CSS ändern — er ist
+`#191919` im Dunkelmodus. Ein Cover, das an einer eigenen Farbe endet, sieht
+darunter aus wie ein aufgeklebtes Bild. Das Cover läuft deshalb ab `y=230` über
+370 px in genau dieses `#191919` aus, und die Lichtquellen sitzen entsprechend
+weit oben. Notion beschneidet das Cover mittig, weshalb ein Verlauf nur in den
+letzten 180 px nicht ausreicht — die Kante lag dann sichtbar im Bild.
+
+Gemessen an der Übergangsstelle: Der Farbsprung liegt bei **6 von 255** statt
+zuvor 44 — unterhalb der Wahrnehmungsschwelle auf einem normalen Display.
 
 Das Licht in den Widgets wandert über 54 bzw. 68 Sekunden — langsam genug, dass
 es nicht auffällt, während man auf die Seite schaut. Wer im System
