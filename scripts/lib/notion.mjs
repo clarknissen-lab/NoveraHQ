@@ -11,7 +11,17 @@
 import { Client, APIResponseError } from "@notionhq/client";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 
-const STATE_FILE = new URL("../../.novera-state.json", import.meta.url).pathname;
+/**
+ * Wo die IDs der angelegten Notion-Objekte liegen.
+ *
+ * Der Prüflauf setzt NOVERA_STATE_FILE auf einen eigenen Pfad. Ohne diese
+ * Trennung schreibt er seine Mock-IDs in dieselbe Datei wie der echte Lauf —
+ * landet die dann im Repo, hält der nächste Build alles für bereits angelegt
+ * und baut nichts.
+ */
+const STATE_FILE = process.env.NOVERA_STATE_FILE
+  ? new URL(process.env.NOVERA_STATE_FILE, "file://" + process.cwd() + "/").pathname
+  : new URL("../../.novera-state.json", import.meta.url).pathname;
 
 /* ───────────────────────────────────────────────────────────────── Logging */
 

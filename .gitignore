@@ -1,5 +1,8 @@
 node_modules/
 .env
+
+# Der Prüflauf schreibt hierhin — Mock-IDs gehören nie ins Repo.
+.novera-state.verify.json
 .DS_Store
 
 # .novera-state.json ist bewusst NICHT ausgeschlossen: Die Datei enthält nur die

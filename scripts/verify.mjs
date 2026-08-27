@@ -18,7 +18,9 @@ import { createServer } from "node:http";
 import { spawn } from "node:child_process";
 import { unlinkSync, existsSync } from "node:fs";
 
-const STATE = new URL("../.novera-state.json", import.meta.url).pathname;
+// Eigene Datei, damit der Prüflauf niemals den State des echten Laufs
+// überschreibt oder versehentlich mit ins Repo wandert.
+const STATE = new URL("../.novera-state.verify.json", import.meta.url).pathname;
 
 /* ─────────────────────────────────────────────── Notion-Nachbau */
 
@@ -314,6 +316,7 @@ server.listen(0, "127.0.0.1", () => {
       env: {
         ...process.env,
         NOTION_TOKEN: "ntn_verify",
+        NOVERA_STATE_FILE: ".novera-state.verify.json",
         NOTION_PARENT_PAGE: "00000000000000000000000000000001",
         NOTION_BASE_URL: `http://127.0.0.1:${port}`,
         NOVERA_CLOCK_URL: "https://example.github.io/NoveraHQ/",
