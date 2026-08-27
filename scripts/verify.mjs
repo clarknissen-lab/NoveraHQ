@@ -170,6 +170,29 @@ const server = createServer((req, res) => {
         if (Array.isArray(node)) return node.forEach(checkFilter);
         if (node.and) return checkFilter(node.and);
         if (node.or) return checkFilter(node.or);
+        // Relative Datumsangaben: Operatoren wie next_week erwarten {}, während
+        // before/after/equals nur eine feste Liste von Schlüsselwörtern oder ein
+        // ISO-Datum annehmen. Beides zu verwechseln quittiert Notion mit 400.
+        if (node.date) {
+          const WERT_OPS = ["equals", "before", "after", "on_or_before", "on_or_after"];
+          const ERLAUBT = [
+            "today", "tomorrow", "yesterday",
+            "one_week_ago", "one_week_from_now",
+            "one_month_ago", "one_month_from_now",
+          ];
+          for (const [op, wert] of Object.entries(node.date)) {
+            if (!WERT_OPS.includes(op)) continue;
+            if (typeof wert !== "string") continue;
+            const istISO = /^\d{4}-\d{2}-\d{2}/.test(wert);
+            if (!istISO && !ERLAUBT.includes(wert)) {
+              problems.push(
+                `${ds.name} / ${payload.name}: date.${op} = "${wert}" ist kein gültiger Wert. ` +
+                `Erlaubt sind ${ERLAUBT.join(", ")} oder ein ISO-Datum.`
+              );
+            }
+          }
+        }
+
         if (node.property) {
           const prop = ds.properties[node.property];
           if (!prop) {

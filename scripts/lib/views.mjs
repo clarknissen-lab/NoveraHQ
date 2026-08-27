@@ -136,7 +136,11 @@ export const VIEWS = {
           { property: "Status", status: { does_not_equal: "Abgeschlossen" } },
           { property: "Status", status: { does_not_equal: "Live" } },
           { property: "Status", status: { does_not_equal: "Pausiert" } },
-          { property: "Deadline", date: { before: "next_week" } },
+          // "next_week" ist ein eigener Operator (date: { next_week: {} }) und
+          // kein gültiger Wert für "before". Notion nimmt dort nur today,
+          // tomorrow, yesterday, one_week_ago, one_week_from_now,
+          // one_month_ago, one_month_from_now oder ein ISO-Datum.
+          { property: "Deadline", date: { before: "one_week_from_now" } },
         ],
       },
       sorts: [{ property: "Deadline", direction: "ascending" }],
@@ -341,7 +345,7 @@ export const VIEWS = {
       filter: {
         and: [
           { property: "Domainstatus", status: { does_not_equal: "Gekündigt" } },
-          { property: "Ablaufdatum", date: { before: "next_month" } },
+          { property: "Ablaufdatum", date: { before: "one_month_from_now" } },
         ],
       },
       sorts: [{ property: "Ablaufdatum", direction: "ascending" }],
