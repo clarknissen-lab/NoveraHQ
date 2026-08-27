@@ -27,6 +27,10 @@ on:
         description: "Nur testen, nichts in Notion schreiben"
         type: boolean
         default: false
+      dashboard_neu:
+        description: "Dashboard verwerfen und neu aufbauen (für Layout-Änderungen)"
+        type: boolean
+        default: false
 
 # Zum Zurückschreiben der State-Datei, damit ein zweiter Lauf nichts doppelt anlegt.
 permissions:
@@ -98,11 +102,11 @@ jobs:
       - name: Workspace bauen
         if: ${{ !inputs.testlauf }}
         run: |
-          if [ "${{ inputs.beispieldaten }}" = "false" ]; then
-            npm run build -- --no-seed
-          else
-            npm run build
-          fi
+          flags=""
+          [ "${{ inputs.beispieldaten }}" = "false" ] && flags="$flags --no-seed"
+          [ "${{ inputs.dashboard_neu }}" = "true" ] && flags="$flags --refresh-hq"
+          echo "Flags:$flags"
+          npm run build -- $flags
 
       # Die Datei enthält nur Notion-IDs, keine Zugangsdaten. Sie muss erhalten
       # bleiben: ohne sie legt ein zweiter Lauf alles ein zweites Mal an.

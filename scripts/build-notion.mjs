@@ -27,6 +27,7 @@
  *   --no-seed     ohne Beispieldaten
  *   --no-views    ohne Ansichten
  *   --dry-run     nichts schreiben, nur die Payloads prüfen und ausgeben
+ *   --refresh-hq  Inhalt des Dashboards verwerfen und neu aufbauen
  *
  * Der Lauf ist wiederholbar: angelegte IDs landen in .novera-state.json und
  * werden beim nächsten Mal wiederverwendet statt doppelt angelegt.
@@ -53,6 +54,7 @@ const OPT = {
   seed: !argv.has("--no-seed"),
   views: !argv.has("--no-views"),
   dryRun: argv.has("--dry-run"),
+  refreshHq: argv.has("--refresh-hq"),
 };
 
 const TOKEN = process.env.NOTION_TOKEN;
@@ -361,6 +363,35 @@ async function createPage(key, { parent, title, icon, iconUrl, coverUrl, blocks 
   return page.id;
 }
 
+/**
+ * Löscht alle Blöcke einer Seite.
+ *
+ * Nötig, um das Dashboard zu ersetzen statt zu verdoppeln: Blöcke lassen sich
+ * nur anhängen, nicht überschreiben. Die Seite selbst und ihre Eigenschaften
+ * bleiben unberührt, ebenso alles, was als Unterseite darunter hängt.
+ */
+async function clearPage(pageId) {
+  let cursor;
+  const ids = [];
+  do {
+    const antwort = await withRetry(
+      () => notion.blocks.children.list({ block_id: pageId, start_cursor: cursor, page_size: 100 }),
+      { label: "Blöcke lesen" }
+    );
+    ids.push(...antwort.results.map((b) => b.id));
+    cursor = antwort.has_more ? antwort.next_cursor : undefined;
+  } while (cursor);
+
+  for (const id of ids) {
+    try {
+      await withRetry(() => notion.blocks.delete({ block_id: id }), { label: "Block löschen" });
+    } catch (err) {
+      warn(`Block ${id} nicht gelöscht — ${errText(err)}`);
+    }
+  }
+  return ids.length;
+}
+
 /** Notion nimmt maximal 100 Blöcke pro Request. */
 async function appendBlocks(blockId, blocks) {
   for (let i = 0; i < blocks.length; i += 100) {
@@ -527,13 +558,19 @@ async function main() {
   const hqContent = P.hqBlocks({ db, pages: state.pages, urls: URLS });
   if (OPT.dryRun) {
     log.ok(`[dry-run] HQ — ${hqContent.length} Blöcke`);
+  } else if (OPT.refreshHq) {
+    const geloescht = await clearPage(hq);
+    await appendBlocks(hq, hqContent);
+    state.pages.hqFilled = true;
+    saveState(state);
+    log.ok(`HQ neu aufgebaut — ${geloescht} alte Blöcke entfernt, ${hqContent.length} neue gesetzt`);
   } else if (!state.pages.hqFilled) {
     await appendBlocks(hq, hqContent);
     state.pages.hqFilled = true;
     saveState(state);
     log.ok(`HQ — ${hqContent.length} Blöcke`);
   } else {
-    log.skip("HQ ist bereits gefüllt");
+    log.skip("HQ ist bereits gefüllt — mit --refresh-hq neu aufbauen");
   }
 
   /* ── Zusammenfassung ── */
