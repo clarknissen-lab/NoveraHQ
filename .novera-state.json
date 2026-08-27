@@ -278,7 +278,9 @@
     "zugaenge:Nach Kunde": "3c9ccad7-0e8a-8110-a5ab-000cc9fcc08b",
     "zugaenge:Ohne 2FA": "3c9ccad7-0e8a-8142-918d-000c17a6d430",
     "zugaenge:Nach Service": "3c9ccad7-0e8a-8149-84a9-000ca237e929",
-    "zugaenge:Alle Zugänge": "3c9ccad7-0e8a-8144-9840-000c94a0e70b"
+    "zugaenge:Alle Zugänge": "3c9ccad7-0e8a-8144-9840-000c94a0e70b",
+    "projekte:Dringend": "3c9ccad7-0e8a-81b9-9efc-000c82b48787",
+    "hosting:Domainverlängerungen": "3c9ccad7-0e8a-81f5-9830-000c5063a684"
   },
   "seeded": {
     "leads": true,
