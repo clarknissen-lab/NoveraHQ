@@ -305,6 +305,12 @@ function countBlocks(blocks) {
     // Notion akzeptiert als callout.icon.emoji ausschließlich echte Emoji.
     // Schriftzeichen wie ＋ (U+FF0B), ▪ (U+25AA) oder ✓ (U+2713) sehen passend
     // aus, werden aber mit einem validation_error abgelehnt.
+    //
+    // Die Prüfung ist bewusst streng: Sie verlangt ein Zeichen, das von sich aus
+    // Emoji_Presentation hat, und lässt Folgen wie ☁️ (U+2601 U+FE0F) nicht
+    // durch. Solche Folgen sind unicodeseitig gültige Emoji, aber ob Notions
+    // Liste sie führt, ist von hier aus nicht prüfbar. Eindeutige Emoji ohne
+    // Variantenselektor kosten nichts und können nicht scheitern.
     if (type === "callout") {
       const zeichen = inner?.icon?.emoji;
       if (inner?.icon?.type === "emoji") {
